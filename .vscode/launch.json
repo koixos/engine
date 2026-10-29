@@ -2,6 +2,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(Linux) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/testbed",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/",
+            "environment": [],
+        },
+        {
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
@@ -11,16 +21,6 @@
             "cwd": "${workspaceFolder}/bin/",
             "environment": [],
             "console": "newExternalWindow",
-        },
-        {
-            "name": "(Linux) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/testbed",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/",
-            "environment": [],
         },
     ]
 }
