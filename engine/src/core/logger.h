@@ -26,7 +26,7 @@ typedef enum log_level {
 b8 init_logging();
 void shutdown_logging();
 
-KAPI void log_output(log_level lev, const char* msg, ...);
+KAPI void log_output(log_level lev, const char *msg, ...);
 
 //logging messages
 

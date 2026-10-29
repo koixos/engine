@@ -1,5 +1,6 @@
 #include "logger.h"
 #include "asserts.h"
+#include <platform/platform.h>
 
 //TODO: temporary
 #include <stdio.h>
@@ -16,8 +17,8 @@ void shutdown_logging() {
     //TODO: cleanup logging/write queued entries 
 }
 
-void log_output(log_level lev, const char* msg, ...) {
-    const char* lev_strs[6] = {
+void log_output(log_level lev, const char *msg, ...) {
+    const char *lev_strs[6] = {
         "[FATAL]: ",
         "[ERROR]: ",
         "[WARN]: ",
@@ -25,8 +26,9 @@ void log_output(log_level lev, const char* msg, ...) {
         "[DEBUG]: ",
         "[TRACE]: ",
     };
+    b8 is_error = lev < LOG_LEVEL_WARN;
 
-    b32 buf_size = 32000;
+    i32 buf_size = 32000;
     char *buf = malloc(buf_size * sizeof(char));
 
     if (buf == NULL) {
@@ -63,12 +65,15 @@ void log_output(log_level lev, const char* msg, ...) {
 
     sprintf(out_msg, "%s%s\n", lev_strs[lev], buf);
 
-    //TODO: platform-specific output
-    printf("%s", out_msg);
+    //platform-specific output
+    if (is_error)
+        platform_console_write_error(out_msg, lev);
+    else
+        platform_console_write(out_msg, lev);
 
     free(buf);
 }
 
-void report_assertion_failure(const char* expr, const char* msg, const char* file, i32 line) {
+void report_assertion_failure(const char *expr, const char *msg, const char *file, i32 line) {
     log_output(LOG_LEVEL_FATAL, "Assertion Failure: %s, message: '%s', in file: %s, line: %d\n", expr, msg, file, line);
 }

@@ -13,7 +13,7 @@
 #define debugBreak() __builtin_trap()
 #endif
 
-KAPI void report_assertion_failure(const char* expr, const char* msg, const char* file, i32 line);
+KAPI void report_assertion_failure(const char *expr, const char *msg, const char *file, i32 line);
 
 //writing assertions wrapped in do-whiles ensures that the programmer
 //obeys C stds by putting a ; at the end of assertion line
