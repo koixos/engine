@@ -26,10 +26,9 @@ void log_output(log_level lev, const char* msg, ...) {
         "[TRACE]: ",
     };
 
-    char *buf;
-    b32 buf_size = 16;
-    
-    buf = (char*)malloc(buf_size * sizeof(char));
+    b32 buf_size = 32000;
+    char *buf = malloc(buf_size * sizeof(char));
+
     if (buf == NULL) {
         printf("Memory allocation for logger failed\n");
         return;
@@ -44,7 +43,7 @@ void log_output(log_level lev, const char* msg, ...) {
         va_end(arg_ptr);
 
         //if buffer already realloced
-        if (realloced)
+        if (realloced || written < buf_size)
             break;
 
         buf_size = written + 1;
