@@ -1,5 +1,6 @@
 #include "platform.h"
 
+//Windows platform layer
 #if KPLATFORM_WINDOWS
 
 #include <core/logger.h>
@@ -27,6 +28,7 @@ b8 platform_startup(
     i32 width,
     i32 height) {
     
+    //create internal st
     st->internal_st = malloc(sizeof(internal_state));
     internal_state *state = (internal_state *)st->internal_st;
 
