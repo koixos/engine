@@ -15,8 +15,8 @@
 
 KAPI void report_assertion_failure(const char *expr, const char *msg, const char *file, i32 line);
 
-//writing assertions wrapped in do-whiles ensures that the programmer
-// obeys C stds by putting a ; at the end of assertion line
+//writing assertions wrapped in do-whiles ensures that the code
+// obeys C stds by putting a ; at the end of assertion lines,
 // also avoids extra semicolon problems (in if-else's, for instance)
 
 #define KASSERT(expr)                                                   \

@@ -1,9 +1,6 @@
 #include "entry.h"
 #include "game.h"
 
-//TODO: remove this
-#include "platform/platform.h"
-
 b8 create_game(game *out_game) {
     out_game->app_config.start_pos_x = 100;
     out_game->app_config.start_pos_y = 100;
@@ -16,7 +13,8 @@ b8 create_game(game *out_game) {
     out_game->render = game_render;
     out_game->on_resize = game_on_resize;
 
-    out_game->state = platform_allocate(sizeof(game_state), FALSE);
+    //create game state
+    out_game->state = kallocate(sizeof(game_state), MEM_TAG_GAME);
 
     return TRUE;
 }

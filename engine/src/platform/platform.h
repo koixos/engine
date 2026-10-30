@@ -18,9 +18,9 @@ void platform_shutdown(platform_state *st);
 
 b8 platform_pump_msgs(platform_state *st);
 
-KAPI void* platform_allocate(u64 size, b8 aligned);
+void* platform_allocate(u64 size, b8 aligned);
 
-KAPI void platform_free(void *block, b8 aligned);
+void platform_free(void *block, b8 aligned);
 
 void* platform_zero_mem(void *block, u64 size);
 
