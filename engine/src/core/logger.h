@@ -2,7 +2,8 @@
 
 #include "defines.h"
 
-//define which log levels are controllable
+//controllable log levels
+
 #define LOG_WARN_ENABLED 1
 #define LOG_INFO_ENABLED 1
 #define LOG_DEBUG_ENABLED 1
@@ -24,11 +25,10 @@ typedef enum log_level {
 } log_level;
 
 b8 init_logging();
+
 void shutdown_logging();
 
 KAPI void log_output(log_level lev, const char *msg, ...);
-
-//logging messages
 
 #define KFATAL(msg, ...) log_output(LOG_LEVEL_FATAL, msg, ##__VA_ARGS__);
 

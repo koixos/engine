@@ -1,9 +1,10 @@
 #include "platform.h"
 
+//TODO: test this code
 //Windows platform layer
 #if KPLATFORM_WINDOWS
 
-#include <core/logger.h>
+#include "core/logger.h"
 
 #include <windows.h>
 #include <windowsx.h>
@@ -90,8 +91,8 @@ b8 platform_startup(
     );
 
     if (handle == 0) {
-        MessageBoxA(NULL, "Window creation failed", "Error", MB_ICONEXCLAMATION | MB_OK);
-        KFATAL("Window creation failed");
+        MessageBoxA(NULL, "Window creation failed!", "Error", MB_ICONEXCLAMATION | MB_OK);
+        KFATAL("Window creation failed!");
         return FALSE;
     }
 

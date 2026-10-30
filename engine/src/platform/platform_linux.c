@@ -3,8 +3,11 @@
 //Linux platform layer
 #if KPLATFORM_LINUX
 
-#include <core/logger.h>
+#include "core/logger.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
@@ -18,10 +21,6 @@
 #include <unistd.h> //usleep
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 typedef struct internal_state {
     Display *disp;
     xcb_connection_t *conn;
@@ -31,7 +30,7 @@ typedef struct internal_state {
     xcb_atom_t wm_delete_win;
 } internal_state;
 
-KAPI b8 platform_startup(
+b8 platform_startup(
     platform_state *st,
     const char *app_name,
     i32 x,
@@ -54,7 +53,7 @@ KAPI b8 platform_startup(
     state->conn = XGetXCBConnection(state->disp);
 
     if (xcb_connection_has_error(state->conn)) {
-        KFATAL("Failed to connect to X server via XCB.");
+        KFATAL("Failed to connect to X server via XCB!");
         return FALSE;
     }
 
@@ -169,7 +168,7 @@ KAPI b8 platform_startup(
     return TRUE;
 }
 
-KAPI void platform_shutdown(platform_state *st) {
+void platform_shutdown(platform_state *st) {
     //cold-cast to the known type
     internal_state *state = (internal_state *)st->internal_st;
     
