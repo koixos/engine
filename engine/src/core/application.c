@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "platform/platform.h"
 #include "core/kmemory.h"
+#include "core/event.h"
 
 typedef struct app_state {
     game *game_inst;
@@ -27,7 +28,7 @@ b8 app_create(game *game_inst) {
 
     //init subsystems
     init_logging();
-
+    
     //TODO: remove these
     KFATAL("imma doin -- %.2f", 3.14f);
     KERROR("imma doin testing -- %.2f", 3.14f);
@@ -38,6 +39,11 @@ b8 app_create(game *game_inst) {
 
     app_st.is_running = TRUE;
     app_st.is_suspended = FALSE;
+
+    if (!event_init()) {
+        KERROR("Event system failed initialization. Application cannot continue.");
+        return FALSE;
+    }
 
     if (!platform_startup(
             &app_st.platform,
@@ -83,6 +89,8 @@ b8 app_run() {
 
     app_st.is_running = FALSE;
 
+    event_shutdown();
+    
     platform_shutdown(&app_st.platform);
 
     return TRUE;
