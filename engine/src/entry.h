@@ -1,8 +1,9 @@
 #pragma once
 
+#include "game_types.h"
+
 #include "core/application.h"
 #include "core/logger.h"
-#include "game_types.h"
 #include "core/kmemory.h"
 
 //externally-defined func to create a game

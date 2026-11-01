@@ -1,9 +1,9 @@
 #include "kmemory.h"
-#include "core/logger.h"
+#include "logger.h"
+#include "kstring.h" 
+
 #include "platform/platform.h"
 
-//TODO: custom str lib
-#include <string.h>
 #include <stdio.h>
 
 struct mem_stats {
@@ -83,7 +83,7 @@ char* get_mem_usage_str() {
     const u64 kib = 1024;
 
     char buf[8000] = "System memory use (tagged):\n";
-    u64 offset = strlen(buf);
+    u64 offset = str_len(buf);
     
     for (u32 i = 0; i < MEM_TAG_MAX_TAGS; i++) {
         char unit[4] = "XiB";
@@ -108,6 +108,6 @@ char* get_mem_usage_str() {
     }
 
     //TODO: _strdup(buf) for Windows - check platform with ifndef
-    char *out_str = strdup(buf);
+    char *out_str = str_dup(buf);
     return out_str;
 }

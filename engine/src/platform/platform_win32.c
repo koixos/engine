@@ -239,7 +239,7 @@ LRESULT CALLBACK win32_process_message(HWND hwnd, u32 msg, WPARAM w_param, LPARA
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP: {
-            //key pressed/released
+            //button pressed/released
             b8 pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || mag == WM_RBUTTONDOWN);
             buttons mouse_btn = BUTTON_MAX_BTNS;
             switch (msg) {

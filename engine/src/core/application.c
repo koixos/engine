@@ -1,10 +1,11 @@
 #include "application.h"
 #include "game_types.h"
 #include "logger.h"
-#include "platform/platform.h"
 #include "kmemory.h"
 #include "event.h"
 #include "input.h"
+
+#include "platform/platform.h"
 
 typedef struct app_state {
     game *game_inst;
