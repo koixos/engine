@@ -62,7 +62,7 @@ KAPI b8 event_unregister(u16 code, void *listener, PFN_on_event on_event);
  */
 KAPI b8 event_fire(u16 code, void *sender, event_context data);
 
-//sys internal event codes, app should use codes beyond 255
+//sys-internal event codes, app should use codes beyond 255
 typedef enum sys_event_code {
     //shuts the app down on the next frame
     EVENT_CODE_APPLICATION_QUIT = 0x01,

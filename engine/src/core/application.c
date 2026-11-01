@@ -2,8 +2,9 @@
 #include "game_types.h"
 #include "logger.h"
 #include "platform/platform.h"
-#include "core/kmemory.h"
-#include "core/event.h"
+#include "kmemory.h"
+#include "event.h"
+#include "input.h"
 
 typedef struct app_state {
     game *game_inst;
@@ -28,6 +29,7 @@ b8 app_create(game *game_inst) {
 
     //init subsystems
     init_logging();
+    init_input();
     
     //TODO: remove these
     KFATAL("imma doin -- %.2f", 3.14f);
@@ -84,13 +86,19 @@ b8 app_run() {
                 KFATAL("Game render failed, shutting down!");
                 break;
             }
+
+            //inp update/state copying should always be handled after
+            // any input is recorded.
+            //as a safety, inp is the last thing to be updated before
+            // this frame ends
+            input_update(0);
         }
     }
 
     app_st.is_running = FALSE;
 
     event_shutdown();
-    
+    input_shutdown();
     platform_shutdown(&app_st.platform);
 
     return TRUE;
