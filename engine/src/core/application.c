@@ -4,8 +4,11 @@
 #include "kmemory.h"
 #include "event.h"
 #include "input.h"
+#include "clock.h"
 
 #include "platform/platform.h"
+
+#include "renderer/renderer_frontend.h"
 
 typedef struct app_state {
     game *game_inst;
@@ -14,6 +17,7 @@ typedef struct app_state {
     platform_state platform;
     i16 width;
     i16 height;
+    clock clock;
     f64 last_time;
 } app_state;
 
@@ -65,6 +69,12 @@ b8 app_create(game *game_inst) {
             game_inst->app_config.start_height))
         return FALSE;
 
+    //renderer setup
+    if (!renderer_init(game_inst->app_config.name, &app_st.platform)) {
+        KFATAL("Failed to initialize renderer, aborting application!");
+        return FALSE;
+    }
+
     //init game
     if (!app_st.game_inst->init(app_st.game_inst)) {
         KFATAL("Game failed to initialize!");
@@ -79,6 +89,14 @@ b8 app_create(game *game_inst) {
 }
 
 b8 app_run() {
+    clock_start(&app_st.clock);
+    clock_update(&app_st.clock);
+    app_st.last_time = app_st.clock.elapsed;
+
+    u8 frame_count = 0;
+    f64 running_time = 0;
+    f64 target_frame_secs = 1.0f / 60;
+
     KINFO(get_mem_usage_str());
     
     while (app_st.is_running) {
@@ -86,21 +104,54 @@ b8 app_run() {
             app_st.is_running = FALSE;
 
         if (!app_st.is_suspended) {
-            if (!app_st.game_inst->update(app_st.game_inst, (f32)0)) {
+            //update clk and get delta time
+            clock_update(&app_st.clock);
+
+            f64 curr_time = app_st.clock.elapsed;
+            f64 delta = curr_time - app_st.last_time;
+            f64 frame_start_time = platform_get_absolute_time();
+
+            if (!app_st.game_inst->update(app_st.game_inst, (f32)delta)) {
                 KFATAL("Game update failed, shutting down!");
+                app_st.is_running = FALSE;
                 break;
             }
 
-            if (!app_st.game_inst->render(app_st.game_inst, (f32)0)) {
+            if (!app_st.game_inst->render(app_st.game_inst, (f32)delta)) {
                 KFATAL("Game render failed, shutting down!");
+                app_st.is_running = FALSE;
                 break;
+            }
+
+            //TODO: this is gross
+            renderer_packet pkt;
+            pkt.delta_time = delta;
+            renderer_draw_frame(&pkt);
+
+            //figure out how long the frame took
+            f64 frame_end_time = platform_get_absolute_time();
+            f64 frame_elapsed_time = frame_end_time - frame_start_time;
+            running_time += frame_elapsed_time;
+            f64 remaining_secs = target_frame_secs - frame_elapsed_time;
+
+            //if there is time left, give it back to the os
+            if (remaining_secs > 0) {
+                u64 remaining_ms = remaining_secs * 1000;
+                //TODO: this may be necessary for release builds, thus turned off
+                b8 limit_frames = FALSE;
+                if (remaining_ms > 0 && limit_frames)
+                    platform_sleep(remaining_ms - 1);
+                frame_count++;
             }
 
             //inp update/state copying should always be handled after
             // any input is recorded.
             //as a safety, inp is the last thing to be updated before
             // this frame ends
-            input_update(0);
+            input_update(delta);
+
+            //update last time
+            app_st.last_time = curr_time;
         }
     }
 
@@ -112,6 +163,7 @@ b8 app_run() {
 
     event_shutdown();
     input_shutdown();
+    renderer_shutdown();
     platform_shutdown(&app_st.platform);
 
     return TRUE;
