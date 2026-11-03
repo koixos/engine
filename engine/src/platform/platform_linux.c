@@ -7,6 +7,8 @@
 #include "core/event.h"
 #include "core/input.h"
 
+#include "containers/darray.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -312,6 +314,10 @@ void platform_sleep(u64 ms) {
         sleep(ms / 1000);
     usleep((ms % 1000) * 1000);
 #endif
+}
+
+void platform_get_required_ext_names(const char ***names_darr) {
+    darray_push(*names_darr, &"VK_KHR_xcb_surface");  //or VK_KHR_xlib_surface  
 }
 
 keys translate_keycode(u32 x_keycode) {

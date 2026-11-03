@@ -14,3 +14,8 @@ char* str_dup(const char *str) {
     kcopy_mem(copy, str, len + 1);
     return copy;
 }
+
+b8 strs_equal(const char *str_a, const char *str_b) {
+    //TODO: write ur own
+    return strcmp(str_a, str_b) == 0;
+}

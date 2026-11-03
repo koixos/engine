@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vulkan_types.inl"
+
 #include "renderer/renderer_backend.h"
 
 b8 vulkan_renderer_backend_init(
@@ -16,4 +18,9 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time);
 
-#include "vulkan_types.inl"
+VkBool32 vk_debug_callback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT msg_severity,
+    VkDebugUtilsMessageTypeFlagsEXT msg_types,
+    const VkDebugUtilsMessengerCallbackDataEXT *callback_data,
+    void *usr_data
+);
