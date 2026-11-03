@@ -10,14 +10,19 @@
 #include "containers/darray.h"
 
 #include "renderer/vulkan/vulkan_platform.h"
+#include "renderer/vulkan/vulkan_types.inl"
 
 #include <windows.h>
 #include <windowsx.h>
 #include <stdlib.h>
+//for surface creation
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_win32.h>
 
 typedef struct internal_state {
     HINSTANCE h_inst;
     HWND hwnd;
+    VkSurfaceKHR surface;
 } internal_state;
 
 //clock
@@ -196,6 +201,21 @@ void platform_sleep(u64 ms) {
 
 void platform_get_required_ext_names(const char ***names_darr) {
     darray_push(*names_darr, &"VK_KHR_win32_surface");
+}
+
+//surface creation for vulkan
+b8 platform_create_vulkan_surface(platform_state *plat_st, vulkan_context *context) {
+    //cold-cast to the known type
+    internal_state *state = (internal_state *)plat_st->internal_st;
+
+    VkWin32SurfaceCreateInfoKHR create_info = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
+    create_info.hinstance = state->h_inst;
+    create_info.hwnd = state->hwnd;
+
+    VK_CHECK(vkCreateWin32SurfaceKHR(context->inst, &create_info, context->allocator, &state->surface));
+
+    context->surface = state->surface;
+    return TRUE;
 }
 
 LRESULT CALLBACK win32_process_message(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param) {

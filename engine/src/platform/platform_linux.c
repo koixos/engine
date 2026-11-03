@@ -9,6 +9,8 @@
 
 #include "containers/darray.h"
 
+#include "renderer/vulkan/vulkan_types.inl"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,12 +20,17 @@
 #include <X11/Xlib.h>
 #include <X11/Xlib-xcb.h>
 #include <sys/time.h>
+//for surface creation
+#include <vulkan/vulkan_xcb.h>
 
 #if _POSIX_C_SOURCE >= 199309L
 #include <time.h>   //nanosleep
 #else
 #include <unistd.h> //usleep
 #endif
+
+//for surface creation
+#define VK_USE_PLATFORM_XCB_KHR
 
 typedef struct internal_state {
     Display *disp;
@@ -32,6 +39,7 @@ typedef struct internal_state {
     xcb_screen_t *screen;
     xcb_atom_t wm_protocols;
     xcb_atom_t wm_delete_win;
+    VkSurfaceKHR surface;
 } internal_state;
 
 //key translation
@@ -318,6 +326,22 @@ void platform_sleep(u64 ms) {
 
 void platform_get_required_ext_names(const char ***names_darr) {
     darray_push(*names_darr, &"VK_KHR_xcb_surface");  //or VK_KHR_xlib_surface  
+}
+
+//surface creation for vulkan
+b8 platform_create_vulkan_surface(platform_state *plat_st, vulkan_context *context) {
+    //cold-cast to the known type
+    internal_state *state = (internal_state *)plat_st->internal_st;
+
+    VkXcbSurfaceCreateInfoKHR create_info = { VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR };
+    create_info.connection = state->conn;
+    create_info.window = state->window;
+
+    VK_CHECK(vkCreateXcbSurfaceKHR(context->inst, &create_info, context->allocator, &state->surface));
+
+    context->surface = state->surface;
+    return TRUE;
+
 }
 
 keys translate_keycode(u32 x_keycode) {
