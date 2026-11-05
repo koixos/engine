@@ -96,8 +96,8 @@ b8 vulkan_renderer_backend_init(
 #if defined(_DEBUG)
     KDEBUG("Creating Vulkan debugger...");
     u32 log_severity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
-                        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;    // |
-                        //VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+                        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                        VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT; //|
                         //VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
     
     VkDebugUtilsMessengerCreateInfoEXT debug_create_info =
@@ -136,6 +136,17 @@ b8 vulkan_renderer_backend_init(
 }
 
 void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
+    //destroy in the opposite order of creation
+    
+    KDEBUG("Destroying Vulkan device...");
+    vulkan_dev_destroy(&context);
+
+    KDEBUG("Destroying Vulkan surface...");
+    if (context.surface) {
+        vkDestroySurfaceKHR(context.inst, context.surface, context.allocator);
+        context.surface = 0;
+    }
+
 #if defined(_DEBUG)
     KDEBUG("Destroying Vulkan debugger...");
     if (context.debug_messenger) {
@@ -162,7 +173,7 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) 
     return TRUE;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
+VkBool32 vk_debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT msg_severity,
     VkDebugUtilsMessageTypeFlagsEXT msg_types,
     const VkDebugUtilsMessengerCallbackDataEXT *callback_data,

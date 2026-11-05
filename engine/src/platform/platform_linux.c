@@ -3,6 +3,9 @@
 //Linux platform layer
 #if KPLATFORM_LINUX
 
+//for surface creation - should be placed to the top!
+#define VK_USE_PLATFORM_XCB_KHR
+
 #include "core/logger.h"
 #include "core/event.h"
 #include "core/input.h"
@@ -16,12 +19,10 @@
 #include <string.h>
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
-#include <X11/XKBlib.h>
+#include <X11/XKBlib.h>     //sudo apt-get install libx11-dev
 #include <X11/Xlib.h>
-#include <X11/Xlib-xcb.h>
+#include <X11/Xlib-xcb.h>   //sudo apt-get install libxkbcommon-x11-dev
 #include <sys/time.h>
-//for surface creation
-#include <vulkan/vulkan_xcb.h>
 
 #if _POSIX_C_SOURCE >= 199309L
 #include <time.h>   //nanosleep
@@ -29,8 +30,7 @@
 #include <unistd.h> //usleep
 #endif
 
-//for surface creation
-#define VK_USE_PLATFORM_XCB_KHR
+#include <vulkan/vulkan.h> 
 
 typedef struct internal_state {
     Display *disp;

@@ -18,7 +18,7 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time);
 
-VkBool32 vk_debug_callback(
+VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT msg_severity,
     VkDebugUtilsMessageTypeFlagsEXT msg_types,
     const VkDebugUtilsMessengerCallbackDataEXT *callback_data,

@@ -9,7 +9,6 @@
 
 #include "containers/darray.h"
 
-#include "renderer/vulkan/vulkan_platform.h"
 #include "renderer/vulkan/vulkan_types.inl"
 
 #include <windows.h>
