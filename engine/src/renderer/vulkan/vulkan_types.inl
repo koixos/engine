@@ -35,7 +35,27 @@ typedef struct vulkan_device {
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceMemoryProperties memory;
+
+    VkFormat depth_format;
 } vulkan_device;
+
+typedef struct vulkan_image {
+    VkImage handle;
+    VkDeviceMemory mem;
+    VkImageView view;
+    u32 width;
+    u32 height;
+} vulkan_image;
+
+typedef struct vulkan_swapchain {
+    VkSurfaceFormatKHR img_format;
+    u8 max_frames_in_flight;
+    VkSwapchainKHR handle;
+    u32 img_count;
+    VkImage *imgs;
+    VkImageView *views;
+    vulkan_image depth_attachment;
+} vulkan_swapchain;
 
 typedef struct vulkan_context {
     VkInstance inst;
@@ -47,4 +67,14 @@ typedef struct vulkan_context {
 #endif
 
     vulkan_device dev;
+
+    u32 framebuffer_width;
+    u32 framebuffer_height;
+
+    vulkan_swapchain swapchain;
+    u32 img_ind;
+    u32 curr_frame;
+    b8 recreating_swch;
+
+    i32 (*find_mem_ind)(u32 type_filter, u32 property_flags);
 } vulkan_context;

@@ -1,6 +1,7 @@
 #include "vulkan_backend.h"
 #include "vulkan_platform.h"
 #include "vulkan_device.h"
+#include "vulkan_swapchain.h"
 
 #include "core/logger.h"
 #include "core/kstring.h"
@@ -10,11 +11,16 @@
 //static Vulkan context
 static vulkan_context context;
 
+i32 find_mem_ind(u32 type_filter, u32 property_flags);
+
 b8 vulkan_renderer_backend_init(
     renderer_backend *backend,
     const char *app_name,
     struct platform_state *plat_st
 ) {
+    //func ptrs
+    context.find_mem_ind = find_mem_ind;
+
     //TODO: custom allocator
     context.allocator = 0;
 
@@ -130,13 +136,18 @@ b8 vulkan_renderer_backend_init(
         return FALSE;
     }
 
-    KINFO("Vulkan renderer initialized successfully.");
+    //swapchain
+    vulkan_swapchain_create(&context, context.framebuffer_width, context.framebuffer_height, &context.swapchain);
 
+    KINFO("Vulkan renderer initialized successfully.");
     return TRUE;
 }
 
 void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
     //destroy in the opposite order of creation
+
+    KDEBUG("Destroying Vulkan swapchain...");
+    vulkan_swapchain_destroy(&context, &context.swapchain);
     
     KDEBUG("Destroying Vulkan device...");
     vulkan_dev_destroy(&context);
@@ -195,4 +206,17 @@ VkBool32 vk_debug_callback(
             break;
     }
     return VK_FALSE;
+}
+
+i32 find_mem_ind(u32 type_filter, u32 property_flags) {
+    VkPhysicalDeviceMemoryProperties mem_props;
+    vkGetPhysicalDeviceMemoryProperties(context.dev.physical_dev, &mem_props);
+
+    for (u32 i = 0; i < mem_props.memoryTypeCount; i++)
+        //check each mem type to see if its bit is set to 1
+        if (type_filter & (1 << i) && (mem_props.memoryTypes[i].propertyFlags & property_flags) == property_flags)
+            return i;
+
+    KWARN("Unable to find a suitable memory type.");
+    return -1;
 }

@@ -91,3 +91,5 @@ STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 bytes.");
 #define KAPI
 #endif
 #endif
+
+#define KCLAMP(val, min, max) (val <= min) ? min : (val >= max) ? max : val;
