@@ -39,14 +39,6 @@ b8 app_create(game *game_inst) {
     //init subsystems
     init_logging();
     init_input();
-    
-    //TODO: remove these
-    KFATAL("imma doin -- %.2f", 3.14f);
-    KERROR("imma doin testing -- %.2f", 3.14f);
-    KWARN("imma doin testing -- %.2f", 3.14f);
-    KINFO("imma doin testing -- %.2f", 3.14f);
-    KDEBUG("imma doin testing -- %.2f", 3.14f);
-    KTRACE("imma doin testing -- %.2f", 3.14f);
 
     app_st.is_running = TRUE;
     app_st.is_suspended = FALSE;
@@ -204,4 +196,9 @@ b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context
         } break;
     }
     return FALSE;
+}
+
+void app_get_framebuf_size(u32 *width, u32 *height) {
+    *width = app_st.width;
+    *height = app_st.height;
 }

@@ -83,6 +83,13 @@ typedef struct vulkan_command_buffer {
     vulkan_command_buffer_state state;
 } vulkan_command_buffer;
 
+typedef struct vulkan_framebuffer {
+    VkFramebuffer handle;
+    u32 attachment_count;
+    VkImageView *attachments;
+    vulkan_renderpass *renderpass;
+} vulkan_framebuffer;
+
 typedef struct vulkan_swapchain {
     VkSurfaceFormatKHR img_format;
     u8 max_frames_in_flight;
@@ -91,7 +98,14 @@ typedef struct vulkan_swapchain {
     VkImage *imgs;
     VkImageView *views;
     vulkan_image depth_attachment;
+    //framebuffers used for on-screen rendering
+    vulkan_framebuffer *framebufs;
 } vulkan_swapchain;
+
+typedef struct vulkan_fence {
+    VkFence handle;
+    b8 is_signaled;
+} vulkan_fence;
 
 typedef struct vulkan_context {
     VkInstance inst;
@@ -103,6 +117,9 @@ typedef struct vulkan_context {
 #endif
 
     vulkan_device dev;
+
+    //framebuffers curr width and height
+
     u32 framebuffer_width;
     u32 framebuffer_height;
 
@@ -112,9 +129,17 @@ typedef struct vulkan_context {
     b8 recreating_swch;
 
     vulkan_renderpass main_rp;
+    vulkan_command_buffer *graphics_cmd_bufs;   //darr
 
     //darr
-    vulkan_command_buffer *graphics_cmd_bufs;
 
+    VkSemaphore *img_available_sems;
+    VkSemaphore *queue_complete_sems;
+
+    u32 in_flight_fence_count;
+    vulkan_fence *in_flight_fences;
+    //holds ptrs to fences which exist and are owned elsewhere
+    vulkan_fence **imgs_in_flight;
+    
     i32 (*find_mem_ind)(u32 type_filter, u32 property_flags);
 } vulkan_context;
