@@ -95,12 +95,31 @@ b8 vulkan_dev_create(vulkan_context *context) {
     //TODO: for compute - dont we need it?
     KINFO("Queues obtained.");
 
+    //create cmd pool for graphics queue
+    VkCommandPoolCreateInfo pool_create_info = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    pool_create_info.queueFamilyIndex = context->dev.graphics_queue_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    VK_CHECK(vkCreateCommandPool(
+        context->dev.logical_dev,
+        &pool_create_info,
+        context->allocator,
+        &context->dev.graphics_cmd_pool
+    ));
+    KINFO("Graphics command pool created.");
+
     return TRUE;
 }
 
 void vulkan_dev_destroy(vulkan_context *context) {
     //wait till the dev is done
     vkDeviceWaitIdle(context->dev.logical_dev);
+
+    KINFO("Destroying command pools...");
+    vkDestroyCommandPool(
+        context->dev.logical_dev,
+        context->dev.graphics_cmd_pool,
+        context->allocator
+    );
 
     KINFO("Destroying logical device...");
     if (context->dev.logical_dev) {

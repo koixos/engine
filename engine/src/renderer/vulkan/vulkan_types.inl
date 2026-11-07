@@ -32,6 +32,8 @@ typedef struct vulkan_device {
     VkQueue present_queue; 
     VkQueue transfer_queue;
 
+    VkCommandPool graphics_cmd_pool;
+
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceMemoryProperties memory;
@@ -110,6 +112,9 @@ typedef struct vulkan_context {
     b8 recreating_swch;
 
     vulkan_renderpass main_rp;
+
+    //darr
+    vulkan_command_buffer *graphics_cmd_bufs;
 
     i32 (*find_mem_ind)(u32 type_filter, u32 property_flags);
 } vulkan_context;
