@@ -9,7 +9,6 @@ void vulkan_cmd_buf_allocate(
     vulkan_command_buffer *out_cmd_buf
 ) {
     kzero_mem(out_cmd_buf, sizeof(out_cmd_buf));
-    out_cmd_buf->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
     
     VkCommandBufferAllocateInfo allocate_info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
     allocate_info.commandPool = pool;
@@ -17,6 +16,12 @@ void vulkan_cmd_buf_allocate(
     allocate_info.commandBufferCount = 1;
     allocate_info.pNext = 0;
 
+    out_cmd_buf->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
+    VK_CHECK(vkAllocateCommandBuffers(
+        context->dev.logical_dev,
+        &allocate_info,
+        &out_cmd_buf->handle
+    ));
     out_cmd_buf->state = COMMAND_BUFFER_STATE_READY;
 }
 
@@ -61,7 +66,7 @@ void vulkan_cmd_buf_end(vulkan_command_buffer *cmd_buf) {
     cmd_buf->state = COMMAND_BUFFER_STATE_RECORDING_ENDED;
 }
 
-void vulkan_cmd_buf_upd_submitted(vulkan_command_buffer *cmd_buf) {
+void vulkan_cmd_buf_update_submitted(vulkan_command_buffer *cmd_buf) {
     cmd_buf->state = COMMAND_BUFFER_STATE_SUBMITTED;
 }
 

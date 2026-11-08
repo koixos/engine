@@ -28,7 +28,10 @@ void renderer_shutdown() {
 }
 
 void renderer_on_resized(u16 width, u16 height) {
-    //TODO: fill
+    if (backend)
+        backend->resized(backend, width, height);
+    else
+        KWARN("No renderer backend to resize.");
 }
 
 b8 renderer_begin_frame(f32 delta_time) {

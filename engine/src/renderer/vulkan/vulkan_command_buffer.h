@@ -24,7 +24,7 @@ void vulkan_cmd_buf_begin(
 
 void vulkan_cmd_buf_end(vulkan_command_buffer *cmd_buf);
 
-void vulkan_cmd_buf_upd_submitted(vulkan_command_buffer *cmd_buf);
+void vulkan_cmd_buf_update_submitted(vulkan_command_buffer *cmd_buf);
 
 void vulkan_cmd_buf_reset(vulkan_command_buffer *cmd_buf);
 

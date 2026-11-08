@@ -6,6 +6,7 @@
 #include "vulkan_command_buffer.h"
 #include "vulkan_framebuffer.h"
 #include "vulkan_fence.h"
+#include "vulkan_utils.h"
 
 #include "core/logger.h"
 #include "core/kstring.h"
@@ -23,6 +24,7 @@ i32 find_mem_ind(u32 type_filter, u32 property_flags);
 
 void create_cmd_bufs(renderer_backend *backend);
 void regenerate_framebufs(renderer_backend *backend, vulkan_swapchain *swapch, vulkan_renderpass *rp);
+b8 recreate_swapchain(renderer_backend *backend);
 
 b8 vulkan_renderer_backend_init(
     renderer_backend *backend,
@@ -180,19 +182,22 @@ b8 vulkan_renderer_backend_init(
 
     //create sync objs
     context.img_available_sems = darray_reserve(VkSemaphore, context.swapchain.max_frames_in_flight);
-    context.queue_complete_sems = darray_reserve(VkSemaphore, context.swapchain.max_frames_in_flight);
     context.in_flight_fences = darray_reserve(vulkan_fence, context.swapchain.max_frames_in_flight);    
+    context.queue_complete_sems = darray_reserve(VkSemaphore, context.swapchain.img_count); 
+
+    VkSemaphoreCreateInfo sem_create_info = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
     for (u8 i = 0; i < context.swapchain.max_frames_in_flight; i++) {
-        VkSemaphoreCreateInfo sem_create_info = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
         vkCreateSemaphore(context.dev.logical_dev, &sem_create_info, context.allocator, &context.img_available_sems[i]);
-        vkCreateSemaphore(context.dev.logical_dev, &sem_create_info, context.allocator, &context.queue_complete_sems[i]);
         
         //create the fence in a signaled st, indicating that the first frame has already been rendered
         // this will prevent the app from waiting indefinitely for first frame to render since
         // it cannot be rendered until a frame is rendered before it
         vulkan_fence_create(&context, TRUE, &context.in_flight_fences[i]);
     }
+
+    for (u32 i = 0; i < context.swapchain.img_count; i++)
+        vkCreateSemaphore(context.dev.logical_dev, &sem_create_info, context.allocator, &context.queue_complete_sems[i]);
 
     //in-flight fences should not yet exist at this point, thus the list should be cleared.
     // these are stored in ptrs because the init st should be 0 and will be 0 when not in use.
@@ -222,6 +227,10 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
             context.img_available_sems[i] = 0;
         }
 
+        vulkan_fence_destroy(&context, &context.in_flight_fences[i]);
+    }
+
+    for (u32 i = 0; i < context.swapchain.img_count; i++) {
         if (context.queue_complete_sems[i]) {
             vkDestroySemaphore(
                 context.dev.logical_dev,
@@ -230,8 +239,6 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
             );
             context.queue_complete_sems[i] = 0;
         }
-
-        vulkan_fence_destroy(&context, &context.in_flight_fences[i]);
     }
 
     darray_destroy(context.img_available_sems);
@@ -294,14 +301,170 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
 }
 
 void vulkan_renderer_backend_on_resized(renderer_backend *backend, u16 width, u16 height) {
-    //TODO: fill
+    cached_framebuf_width = width;
+    cached_framebuf_height = height;
+
+    //updt framebuf_size_generation that indicaets when the framebuffer size has been updated
+    context.framebuf_size_generation++;
+
+    KINFO("Vulkan renderer backend resized -- w/h/gen: %i/%i/%llu",
+        width, height, context.framebuf_size_generation);
 }
 
 b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time) {
+    vulkan_device *dev = &context.dev;
+
+    //check if recreating swapch and boot out
+    if (context.recreating_swch) {
+        VkResult res = vkDeviceWaitIdle(dev->logical_dev);
+        if (!vulkan_result_is_success(res)) {
+            KERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) failed: '%s'",
+                vulkan_result_string(res, TRUE));
+            return FALSE;
+        }
+
+        KINFO("Recreating swapchain, booting...");
+        return FALSE;
+    }
+
+    //check if the framebuf has been resized; if so, a new swapch must be created
+    if (context.framebuf_size_generation != context.framebuf_size_last_generation) {
+        VkResult res = vkDeviceWaitIdle(dev->logical_dev);
+        if (!vulkan_result_is_success(res)) {
+            KERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) failed: '%s'",
+                vulkan_result_string(res, TRUE));
+            return FALSE;
+        }
+        
+        //if the swapch recreation is failed, boot out before unsetting the flag
+        if (!recreate_swapchain(backend))
+            return FALSE;
+        
+        KINFO("Resized, booting...");
+        return FALSE;
+    }
+
+    //wait for the execution of curr frame to complete, fence being free will allow this one to move on
+    if (!vulkan_fence_wait(
+        &context,
+        &context.in_flight_fences[context.curr_frame],
+        UINT64_MAX
+    )) {
+        KWARN("In-flight fence wait failure.");
+        return FALSE;
+    }
+
+    //acquire the next img from the swapch, pass along the sem that should be signaled when
+    // this is done. Same sem will later be waited on by the queue submission to ensure
+    // that the img is available
+    if (!vulkan_swapchain_acquire_next_img_ind(
+        &context,
+        &context.swapchain,
+        UINT64_MAX,
+        context.img_available_sems[context.curr_frame],
+        0,
+        &context.img_ind
+    ))
+        return FALSE;
+
+    //begin recording cmds
+    vulkan_command_buffer *cmd_buf = &context.graphics_cmd_bufs[context.img_ind];
+    vulkan_cmd_buf_reset(cmd_buf);
+    vulkan_cmd_buf_begin(cmd_buf, FALSE, FALSE, FALSE);
+
+    //dynamic st
+    VkViewport viewport;
+    viewport.x = 0.0f;
+    viewport.y = (f32)context.framebuffer_height;
+    viewport.width = (f32)context.framebuffer_width;
+    viewport.height = -(f32)context.framebuffer_height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    //scissor
+    VkRect2D scissor;
+    scissor.offset.x = scissor.offset.y = 0;
+    scissor.extent.width = context.framebuffer_width;
+    scissor.extent.height = context.framebuffer_height;
+
+    vkCmdSetViewport(cmd_buf->handle, 0, 1, &viewport);
+    vkCmdSetScissor(cmd_buf->handle, 0, 1, &scissor);
+
+    context.main_rp.w = context.framebuffer_width;    
+    context.main_rp.h = context.framebuffer_height;
+
+    //begin the render pass
+    vulkan_renderpass_begin(
+        cmd_buf,
+        &context.main_rp,
+        context.swapchain.framebufs[context.img_ind].handle
+    );
+
     return TRUE;
 }
 
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) {
+    vulkan_command_buffer *cmd_buf = &context.graphics_cmd_bufs[context.img_ind];
+
+    //end render pass
+    vulkan_renderpass_end(cmd_buf, &context.main_rp);
+    vulkan_cmd_buf_end(cmd_buf);
+
+    //make sure the prev frame not using this img, i.e. it is fence is not in use
+    if (context.imgs_in_flight[context.img_ind] != VK_NULL_HANDLE)
+        vulkan_fence_wait(
+            &context,
+            context.imgs_in_flight[context.img_ind],
+            UINT64_MAX
+        );
+
+    //mark the img fence as in-use by this frame
+    context.imgs_in_flight[context.img_ind] = &context.in_flight_fences[context.curr_frame];
+
+    //reset the fence for use on the next frame
+    vulkan_fence_reset(&context, &context.in_flight_fences[context.curr_frame]);
+
+    //begin queue submission and wait for the op to complete
+    VkSubmitInfo submit_info = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+
+    //cmd buf(s) to be executed
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd_buf->handle;
+
+    //sem(s) to be signaled when queue is done
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = &context.queue_complete_sems[context.img_ind];
+
+    //wait-sem(s) ensures that the op cannot begin until the img is available
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = &context.img_available_sems[context.curr_frame];
+
+    //each sem waits on the corresponding pipeline stage to complete, 1:1 ratio.
+    // VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT prevents subsequent clr attachment writes from
+    //  executing until the sem signals, i.e. one frame is presented at a time
+    VkPipelineStageFlags flags[1] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submit_info.pWaitDstStageMask = flags;
+
+    VK_CHECK(vkQueueSubmit(
+        context.dev.graphics_queue,
+        1,
+        &submit_info,
+        context.in_flight_fences[context.curr_frame].handle
+    ));
+
+    vulkan_cmd_buf_update_submitted(cmd_buf);
+    //end of the queue submission op
+
+    //give the img back to the swapchain
+    vulkan_swapchain_present(
+        &context,
+        &context.swapchain,
+        context.dev.graphics_queue,
+        context.dev.present_queue,
+        context.queue_complete_sems[context.img_ind],
+        context.img_ind
+    );
+
     return TRUE;
 }
 
@@ -388,4 +551,77 @@ void regenerate_framebufs(renderer_backend *backend, vulkan_swapchain *swapch, v
             &context.swapchain.framebufs[i]
         );
     }
+}
+
+b8 recreate_swapchain(renderer_backend *backend) {
+    //if already being recreated, dont try again
+    if (context.recreating_swch) {
+        KDEBUG("recreate_swapchain called when already recreating, booting...");
+        return FALSE;
+    }
+
+    //detect if the window is too small to be drawn to
+    if (context.framebuffer_width == 0 || context.framebuffer_height == 0) {
+        KDEBUG("recreate_swapchain called when window is < 1 in a dimension, booting...");
+        return FALSE;
+    }
+
+    //mark as recreating
+    context.recreating_swch = TRUE;
+
+    //wait for any ops to complete
+    vkDeviceWaitIdle(context.dev.logical_dev);
+
+    //clear imgs-in-flight out just in case
+    for (u32 i = 0; i < context.swapchain.img_count; i++)
+        context.imgs_in_flight[i] = 0;
+
+    //requery supp
+    vulkan_dev_query_swapchain_supp(
+        context.dev.physical_dev,
+        context.surface,
+        &context.dev.swapchain_support
+    );
+
+    vulkan_dev_detect_depth_format(&context.dev);
+
+    vulkan_swapchain_recreate(
+        &context,
+        context.framebuffer_width,
+        context.framebuffer_height,
+        &context.swapchain
+    );
+
+    //sync the framebuf size with the cached ones
+    context.framebuffer_width = cached_framebuf_width;
+    context.framebuffer_height = cached_framebuf_height;
+    context.main_rp.w = context.framebuffer_width;
+    context.main_rp.h = cached_framebuf_height;
+    cached_framebuf_width = 0;
+    cached_framebuf_height = 0;
+
+    //updt framebuf size gen
+    context.framebuf_size_last_generation = context.framebuf_size_generation;
+
+    //cleanup swapch
+    for (u32 i = 0; i < context.swapchain.img_count; i++)
+        vulkan_cmd_buf_free(&context, context.dev.graphics_cmd_pool, &context.graphics_cmd_bufs[i]);
+    
+    //framebufs
+    for (u32 i = 0; i < context.swapchain.img_count; i++)
+        vulkan_framebuf_destroy(&context, &context.swapchain.framebufs[i]);
+
+    context.main_rp.x = 0;
+    context.main_rp.y = 0;
+    context.main_rp.w = context.framebuffer_width;
+    context.main_rp.h = cached_framebuf_height;
+
+    regenerate_framebufs(backend, &context.swapchain, &context.main_rp);
+
+    create_cmd_bufs(backend);
+
+    //clear the recreating flag
+    context.recreating_swch = FALSE;
+
+    return TRUE;
 }

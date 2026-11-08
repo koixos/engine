@@ -221,6 +221,8 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
 }
 
 void destroy(vulkan_context *context, vulkan_swapchain *swch) {
+    vkDeviceWaitIdle(context->dev.logical_dev);
+    
     vulkan_img_destroy(context, &swch->depth_attachment);
 
     //only destroy the views, not the imgs since those are owned by

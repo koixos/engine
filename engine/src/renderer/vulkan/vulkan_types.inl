@@ -118,10 +118,17 @@ typedef struct vulkan_context {
 
     vulkan_device dev;
 
-    //framebuffers curr width and height
+    //framebuffer's curr width and height
 
     u32 framebuffer_width;
     u32 framebuffer_height;
+
+    //curr generation of framebuf size; if this does not match framebuf_size_last_generation,
+    // a new one shoulf be generated
+    u64 framebuf_size_generation;
+    //the generation of the framebuf when it was last created,
+    // set to framebuf_size_generation when updated
+    u64 framebuf_size_last_generation;
 
     vulkan_swapchain swapchain;
     u32 img_ind;

@@ -8,6 +8,7 @@
 
 #include "core/logger.h"
 #include "core/input.h"
+#include "core/event.h"
 
 #include "containers/darray.h"
 
@@ -251,7 +252,17 @@ b8 platform_pump_msgs(platform_state *st) {
                 input_process_mouse_move(move_event->event_x, move_event->event_y);
             } break;
             case XCB_CONFIGURE_NOTIFY: {
-                //TODO: resizing
+                //resizing - remember that this is also triggered by moving the window, but should be
+                // passed anyways since a change in the x/y could mean an upper-left resize.
+                // the app layer can decide what to do with this event
+                xcb_configure_notify_event_t *config_event = (xcb_configure_notify_event_t *)event;
+
+                //fire the event, the app layer should pick this up but not handle it
+                // as it should be visible to other parts of the app
+                event_context context;
+                context.data.u16[0] = config_event->width;
+                context.data.u16[1] = config_event->height;
+                event_fire(EVENT_CODE_RESIZED, 0, context);
             } break;
             case XCB_CLIENT_MESSAGE: {
                 cm = (xcb_client_message_event_t *)event;

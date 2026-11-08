@@ -27,6 +27,7 @@ static app_state app_st;
 //event handlers
 b8 app_on_event(u16 code, void *sender, void *listener_inst, event_context context);
 b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context);
+b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context context);
  
 b8 app_create(game *game_inst) {
     if (inited) {
@@ -51,6 +52,7 @@ b8 app_create(game *game_inst) {
     event_register(EVENT_CODE_APPLICATION_QUIT, 0, app_on_event);
     event_register(EVENT_CODE_KEY_PRESSED, 0, app_on_key);
     event_register(EVENT_CODE_KEY_RELEASED, 0, app_on_key);
+    event_register(EVENT_CODE_RESIZED, 0, app_on_resized);
 
     if (!platform_startup(
             &app_st.platform,
@@ -195,6 +197,38 @@ b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context
                 KDEBUG("'%c' key released in window....", key_code);
         } break;
     }
+    return FALSE;
+}
+
+b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context context) {
+    if (code == EVENT_CODE_RESIZED) {
+        u16 width = context.data.u16[0];
+        u16 height = context.data.u16[1];
+
+        //check if diff, if so, trigger a resize event
+        if (width != app_st.width || height != app_st.height) {
+            app_st.width = width;
+            app_st.height = height;
+            KDEBUG("Window resized: %i, %i", width, height);
+
+            //handle minimization
+            if (width == 0 || height == 0) {
+                KINFO("Window minimized, suspending the app...");
+                app_st.is_suspended = TRUE;
+                return TRUE;
+            }
+
+            if (app_st.is_suspended) {
+                KINFO("Window restored, resuming the app.");
+                app_st.is_suspended = FALSE;
+            }
+
+            app_st.game_inst->on_resize(app_st.game_inst, width, height);
+            renderer_on_resized(width, height);
+        }
+    }
+
+    //event purposely not handled to allow other listeners to get this too
     return FALSE;
 }
 
