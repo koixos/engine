@@ -95,7 +95,7 @@ b8 app_run() {
     
     while (app_st.is_running) {
         if (!platform_pump_msgs(&app_st.platform))
-            app_st.is_running = FALSE;
+            app_st.is_running = FALSE;        
 
         if (!app_st.is_suspended) {
             //update clk and get delta time
@@ -154,6 +154,7 @@ b8 app_run() {
     event_unregister(EVENT_CODE_APPLICATION_QUIT, 0, app_on_event);
     event_unregister(EVENT_CODE_KEY_PRESSED, 0, app_on_key);
     event_unregister(EVENT_CODE_KEY_RELEASED, 0, app_on_key);
+    event_unregister(EVENT_CODE_RESIZED, 0, app_on_resized);
 
     event_shutdown();
     input_shutdown();
@@ -209,6 +210,7 @@ b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context con
         if (width != app_st.width || height != app_st.height) {
             app_st.width = width;
             app_st.height = height;
+            
             KDEBUG("Window resized: %i, %i", width, height);
 
             //handle minimization

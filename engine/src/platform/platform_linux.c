@@ -39,6 +39,8 @@ typedef struct internal_state {
     xcb_screen_t *screen;
     xcb_atom_t wm_protocols;
     xcb_atom_t wm_delete_win;
+    xcb_atom_t wm_net_state_win;
+    xcb_atom_t wm_net_state_hidden_win;
     VkSurfaceKHR surface;
 } internal_state;
 
@@ -94,7 +96,7 @@ b8 platform_startup(
     u32 event_vals = XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
                     XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE |
                     XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_POINTER_MOTION |
-                    XCB_EVENT_MASK_STRUCTURE_NOTIFY;
+                    XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE;
 
     //values to be sent over XCB: bg clr, events
     u32 val_list[] = { state->screen->black_pixel, event_vals };
@@ -159,6 +161,37 @@ b8 platform_startup(
     state->wm_delete_win = wm_del_reply->atom;
     state->wm_protocols = wm_protocols_reply->atom;
 
+    //for window-maximizing
+    xcb_intern_atom_cookie_t wm_state_cookie = xcb_intern_atom(
+        state->conn,
+        0,
+        strlen("_NET_WM_STATE"),
+        "_NET_WM_STATE"
+    );
+
+    //for window-minimizing 
+    xcb_intern_atom_cookie_t wm_state_hidden_cookie = xcb_intern_atom(
+        state->conn,
+        0,
+        strlen("_NET_WM_STATE_HIDDEN"),
+        "_NET_WM_STATE_HIDDEN"
+    );
+
+    xcb_intern_atom_reply_t *wm_state_reply = xcb_intern_atom_reply(
+        state->conn,
+        wm_state_cookie,
+        NULL
+    );
+
+    xcb_intern_atom_reply_t *wm_state_hidden_reply = xcb_intern_atom_reply(
+        state->conn,
+        wm_state_hidden_cookie,
+        NULL
+    );
+
+    state->wm_net_state_win = wm_state_reply->atom;
+    state->wm_net_state_hidden_win = wm_state_hidden_reply->atom;
+
     xcb_change_property(
         state->conn,
         XCB_PROP_MODE_REPLACE,
@@ -172,6 +205,12 @@ b8 platform_startup(
 
     //map window to screen
     xcb_map_window(state->conn, state->window);
+
+    //TODO: is needed?
+    /*free(wm_del_reply);
+    free(wm_protocols_reply);
+    free(wm_state_hidden_reply);
+    free(wm_state_reply);*/
 
     //flush the stream
     i32 stream_res = xcb_flush(state->conn);
@@ -202,11 +241,7 @@ b8 platform_pump_msgs(platform_state *st) {
 
     b8 quit_flagged = FALSE;
 
-    while (event != 0) {
-        event = xcb_poll_for_event(state->conn);
-        if (event == 0)
-            break;
-
+    while ((event = xcb_poll_for_event(state->conn))) {
         //inp events
         switch (event->response_type & ~0x80) {
             case XCB_KEY_PRESS:
@@ -252,9 +287,7 @@ b8 platform_pump_msgs(platform_state *st) {
                 input_process_mouse_move(move_event->event_x, move_event->event_y);
             } break;
             case XCB_CONFIGURE_NOTIFY: {
-                //resizing - remember that this is also triggered by moving the window, but should be
-                // passed anyways since a change in the x/y could mean an upper-left resize.
-                // the app layer can decide what to do with this event
+                //resizing
                 xcb_configure_notify_event_t *config_event = (xcb_configure_notify_event_t *)event;
 
                 //fire the event, the app layer should pick this up but not handle it
@@ -263,6 +296,56 @@ b8 platform_pump_msgs(platform_state *st) {
                 context.data.u16[0] = config_event->width;
                 context.data.u16[1] = config_event->height;
                 event_fire(EVENT_CODE_RESIZED, 0, context);
+            } break;
+            case XCB_PROPERTY_NOTIFY: {
+                //window minimized/restored
+                xcb_property_notify_event_t *prop_event = (xcb_property_notify_event_t *)event;
+                if (prop_event->atom != state->wm_net_state_win)
+                    break;
+                    
+                xcb_get_property_cookie_t cookie = xcb_get_property(
+                    state->conn, 
+                    0, 
+                    state->window, 
+                    state->wm_net_state_win, 
+                    XCB_ATOM_ATOM, 
+                    0, 
+                    1024
+                );
+
+                xcb_get_property_reply_t *reply = xcb_get_property_reply(state->conn, cookie, NULL);
+                if (!reply)
+                    break;
+
+                xcb_atom_t *atoms = (xcb_atom_t *)xcb_get_property_value(reply);
+                int num_atoms = xcb_get_property_value_length(reply) / sizeof(xcb_atom_t);
+                        
+                b8 is_hidden = FALSE;
+                for (int i = 0; i < num_atoms; ++i) {
+                    // is _NET_WM_STATE_HIDDEN in the list?
+                    if (atoms[i] == state->wm_net_state_hidden_win) {
+                        is_hidden = TRUE;
+                        break;
+                    }
+                }
+
+                free(reply);
+                
+                event_context context;
+                if (is_hidden) {
+                    context.data.u16[0] = 0;
+                    context.data.u16[1] = 0;
+                    event_fire(EVENT_CODE_RESIZED, 0, context);
+                } else {
+                    xcb_get_geometry_cookie_t geom_cookie = xcb_get_geometry(state->conn, state->window);
+                    xcb_get_geometry_reply_t *geom = xcb_get_geometry_reply(state->conn, geom_cookie, 0);
+                    if (geom) {
+                        context.data.u16[0] = geom->width;
+                        context.data.u16[1] = geom->height;
+                        event_fire(EVENT_CODE_RESIZED, 0, context);
+                        free(geom);
+                    }
+                }
             } break;
             case XCB_CLIENT_MESSAGE: {
                 cm = (xcb_client_message_event_t *)event;
