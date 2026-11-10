@@ -1,4 +1,5 @@
 #!/bin/bash
+#TODO: i guess i can remove this
 set echo on
 
 mkdir -p ../bin
