@@ -112,7 +112,16 @@ b8 vulkan_dev_create(vulkan_context *context) {
 
 void vulkan_dev_destroy(vulkan_context *context) {
     //wait till the dev is done
-    vkDeviceWaitIdle(context->dev.logical_dev);
+    //vkDeviceWaitIdle(context->dev.logical_dev);
+    
+    //unset queues
+    context->dev.graphics_queue = 0;
+    context->dev.present_queue = 0;
+    context->dev.transfer_queue = 0;
+
+    context->dev.graphics_queue_index = -1;
+    context->dev.present_queue_index = -1;
+    context->dev.transfer_queue_index = -1;
 
     KINFO("Destroying command pools...");
     vkDestroyCommandPool(
@@ -126,11 +135,6 @@ void vulkan_dev_destroy(vulkan_context *context) {
         vkDestroyDevice(context->dev.logical_dev, context->allocator);
         context->dev.logical_dev = 0;
     }
-
-    //unset queues
-    context->dev.graphics_queue = 0;
-    context->dev.present_queue = 0;
-    context->dev.transfer_queue = 0;
 
     KINFO("Releasing physical device resources...");
     context->dev.physical_dev = 0;
@@ -153,10 +157,6 @@ void vulkan_dev_destroy(vulkan_context *context) {
 
     kzero_mem(&context->dev.swapchain_support.capabilities,
         sizeof(context->dev.swapchain_support.capabilities));
-
-    context->dev.graphics_queue_index = -1;
-    context->dev.present_queue_index = -1;
-    context->dev.transfer_queue_index = -1;
 }
 
 b8 select_physical_dev(vulkan_context *context) {
@@ -472,14 +472,10 @@ b8 vulkan_dev_detect_depth_format(vulkan_device *dev) {
         VkFormatProperties props;
         vkGetPhysicalDeviceFormatProperties(dev->physical_dev, candidates[i], &props);
         
-        if ((props.linearTilingFeatures & flags) == flags) {
-            dev->depth_format = candidates[i];
-            return TRUE;
-        }
-
-        if ((props.optimalTilingFeatures & flags) == flags) {
-            dev->depth_format = candidates[i];
-            return TRUE;
+        if ((props.linearTilingFeatures & flags) == flags ||
+            (props.optimalTilingFeatures & flags) == flags) {
+                dev->depth_format = candidates[i];
+                return TRUE;
         }
     }
 

@@ -72,9 +72,9 @@ void vulkan_renderpass_create(
     depth_attachment_ref.attachment = 1; 
     depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    subpass.pDepthStencilAttachment = &depth_attachment_ref;
- 
     //TODO: other attachment types such as inp, resolve, preserve etc
+
+    subpass.pDepthStencilAttachment = &depth_attachment_ref;
 
     //input from a shader
     subpass.inputAttachmentCount = 0;
@@ -143,8 +143,8 @@ void vulkan_renderpass_begin(
     clear_vals[0].color.float32[1] = renderpass->g;
     clear_vals[0].color.float32[2] = renderpass->b;
     clear_vals[0].color.float32[3] = renderpass->a;
-    clear_vals[0].depthStencil.depth = renderpass->depth;
-    clear_vals[0].depthStencil.stencil = renderpass->stencil;
+    clear_vals[1].depthStencil.depth = renderpass->depth;
+    clear_vals[1].depthStencil.stencil = renderpass->stencil;
 
     begin_info.clearValueCount = 2;
     begin_info.pClearValues = clear_vals;

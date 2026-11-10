@@ -26,9 +26,9 @@ void vulkan_fence_destroy(vulkan_context *context, vulkan_fence *fence) {
 }
 
 b8 vulkan_fence_wait(vulkan_context *context, vulkan_fence *fence, u64 timeout_ns) {
-    /*if (fence->is_signaled)
+    if (fence->is_signaled)
         //if already signaled, dont wait
-        return TRUE;*/
+        return TRUE;
 
     VkResult res = vkWaitForFences(context->dev.logical_dev, 1, &fence->handle, TRUE, timeout_ns);
     switch (res) {

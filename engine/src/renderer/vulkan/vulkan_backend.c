@@ -23,7 +23,9 @@ static u32 cached_framebuf_height = 0;
 i32 find_mem_ind(u32 type_filter, u32 property_flags);
 
 void create_cmd_bufs(renderer_backend *backend);
+
 void regenerate_framebufs(renderer_backend *backend, vulkan_swapchain *swapch, vulkan_renderpass *rp);
+
 b8 recreate_swapchain(renderer_backend *backend);
 
 b8 vulkan_renderer_backend_init(
@@ -252,11 +254,7 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
 
     darray_destroy(context.imgs_in_flight);
     context.imgs_in_flight = 0;
-
-    KDEBUG("Destroying Vulkan framebuffers...");
-    for (u32 i = 0; i < context.swapchain.img_count; i++)
-        vulkan_framebuf_destroy(&context, &context.swapchain.framebufs[i]);
-
+    
     KDEBUG("Destroying Vulkan command buffers...");
     for (u32 i = 0; i < context.swapchain.img_count; i++) {
         if (context.graphics_cmd_bufs[i].handle) {
@@ -270,6 +268,10 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
     }        
     darray_destroy(context.graphics_cmd_bufs);
     context.graphics_cmd_bufs = 0;
+    
+    KDEBUG("Destroying Vulkan framebuffers...");
+    for (u32 i = 0; i < context.swapchain.img_count; i++)
+        vulkan_framebuf_destroy(&context, &context.swapchain.framebufs[i]);
 
     KDEBUG("Destroying Vulkan renderpass...");
     vulkan_renderpass_destroy(&context, &context.main_rp);
@@ -408,6 +410,7 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) 
 
     //end render pass
     vulkan_renderpass_end(cmd_buf, &context.main_rp);
+    
     vulkan_cmd_buf_end(cmd_buf);
 
     //make sure the prev frame not using this img, i.e. it is fence is not in use
@@ -593,10 +596,8 @@ b8 recreate_swapchain(renderer_backend *backend) {
     );
 
     //sync the framebuf size with the cached ones
-    context.framebuffer_width = cached_framebuf_width;
-    context.framebuffer_height = cached_framebuf_height;
-    context.main_rp.w = context.framebuffer_width;
-    context.main_rp.h = cached_framebuf_height;
+    context.framebuffer_width = context.main_rp.w = cached_framebuf_width;
+    context.framebuffer_height = context.main_rp.h = cached_framebuf_height;
     cached_framebuf_width = 0;
     cached_framebuf_height = 0;
 
@@ -614,7 +615,7 @@ b8 recreate_swapchain(renderer_backend *backend) {
     context.main_rp.x = 0;
     context.main_rp.y = 0;
     context.main_rp.w = context.framebuffer_width;
-    context.main_rp.h = cached_framebuf_height;
+    context.main_rp.h = context.framebuffer_height;
 
     regenerate_framebufs(backend, &context.swapchain, &context.main_rp);
 
