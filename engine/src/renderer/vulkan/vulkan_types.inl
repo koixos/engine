@@ -100,6 +100,7 @@ typedef struct vulkan_swapchain {
     vulkan_image depth_attachment;
     //framebuffers used for on-screen rendering
     vulkan_framebuffer *framebufs;
+    VkExtent2D extent;
 } vulkan_swapchain;
 
 typedef struct vulkan_fence {

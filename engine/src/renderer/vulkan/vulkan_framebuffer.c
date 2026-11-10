@@ -1,8 +1,6 @@
 #include "vulkan_framebuffer.h"
 
 #include "core/kmemory.h"
-//TODO: delete below include
-#include "core/logger.h"
 
 void vulkan_framebuf_create(
     vulkan_context *context,
@@ -24,8 +22,8 @@ void vulkan_framebuf_create(
     framebuf_create_info.renderPass = rp->handle;
     framebuf_create_info.attachmentCount = attachment_count;
     framebuf_create_info.pAttachments = out_framebuf->attachments;
-    framebuf_create_info.width = width;
-    framebuf_create_info.height = height;
+    framebuf_create_info.width = context->swapchain.extent.width;
+    framebuf_create_info.height = context->swapchain.extent.height;
     framebuf_create_info.layers = 1;
 
     VK_CHECK(vkCreateFramebuffer(
@@ -34,12 +32,6 @@ void vulkan_framebuf_create(
         context->allocator,
         &out_framebuf->handle
     ));
-
-    KDEBUG(
-        "Framebuffer extent: %u x %u",
-        framebuf_create_info.width,
-        framebuf_create_info.height
-    );
 }
 
 void vulkan_framebuf_destroy(vulkan_context *context, vulkan_framebuffer *framebuf) {

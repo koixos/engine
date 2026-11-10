@@ -131,6 +131,8 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
         img_count > context->dev.swapchain_support.capabilities.maxImageCount)
             img_count = context->dev.swapchain_support.capabilities.maxImageCount;
     
+    swch->extent = swch_extent;
+
     //swch create info
     VkSwapchainCreateInfoKHR swch_create_info = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
     swch_create_info.surface = context->surface;
@@ -168,10 +170,6 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
         context->allocator,
         &swch->handle
     ));
-
-    KDEBUG("Swapchain extent: %u x %u",
-        swch_create_info.imageExtent.width,
-        swch_create_info.imageExtent.height);
 
     //start with a zero frame ind
     context->curr_frame = 0;
@@ -219,12 +217,6 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
         TRUE,
         VK_IMAGE_ASPECT_DEPTH_BIT,
         &swch->depth_attachment
-    );
-
-    KDEBUG(
-        "Depth image extent: %u x %u",
-        swch_extent.width,
-        swch_extent.height
     );
 
     KINFO("Swapchain created successfully.");

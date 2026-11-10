@@ -17,8 +17,6 @@
 
 //static Vulkan context
 static vulkan_context context;
-static u32 cached_framebuf_width = 0;
-static u32 cached_framebuf_height = 0;
 
 i32 find_mem_ind(u32 type_filter, u32 property_flags);
 
@@ -39,11 +37,10 @@ b8 vulkan_renderer_backend_init(
     //TODO: custom allocator
     context.allocator = 0;
 
-    app_get_framebuf_size(&cached_framebuf_width, &cached_framebuf_height);
-    context.framebuffer_width = (cached_framebuf_width != 0) ? cached_framebuf_width : 800;
-    context.framebuffer_height = (cached_framebuf_height != 0) ? cached_framebuf_height : 600;
-    cached_framebuf_width = 0;
-    cached_framebuf_height = 0;
+    u32 framebuf_width, framebuf_height;
+    app_get_framebuf_size(&framebuf_width, &framebuf_height);
+    context.framebuffer_width = (framebuf_width != 0) ? framebuf_width : 800;
+    context.framebuffer_height = (framebuf_height != 0) ? framebuf_height : 600;
 
     //setup vulkan instance
     VkApplicationInfo app_info = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
@@ -303,9 +300,8 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
 }
 
 void vulkan_renderer_backend_on_resized(renderer_backend *backend, u16 width, u16 height) {
-    cached_framebuf_width = width;
-    cached_framebuf_height = height;
-
+    context.framebuffer_width = width;
+    context.framebuffer_height = height;
     //updt framebuf_size_generation that indicaets when the framebuffer size has been updated
     context.framebuf_size_generation++;
 
@@ -378,22 +374,21 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
     VkViewport viewport;
     viewport.x = 0.0f;
     viewport.y = (f32)context.framebuffer_height;
-    viewport.width = (f32)context.framebuffer_width;
-    viewport.height = -(f32)context.framebuffer_height;
+    viewport.width = (f32)context.swapchain.extent.width;
+    viewport.height = -(f32)context.swapchain.extent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     //scissor
     VkRect2D scissor;
     scissor.offset.x = scissor.offset.y = 0;
-    scissor.extent.width = context.framebuffer_width;
-    scissor.extent.height = context.framebuffer_height;
+    scissor.extent = context.swapchain.extent;
 
     vkCmdSetViewport(cmd_buf->handle, 0, 1, &viewport);
     vkCmdSetScissor(cmd_buf->handle, 0, 1, &scissor);
 
-    context.main_rp.w = context.framebuffer_width;    
-    context.main_rp.h = context.framebuffer_height;
+    context.main_rp.w = context.swapchain.extent.width;    
+    context.main_rp.h = context.swapchain.extent.height;
 
     //begin the render pass
     vulkan_renderpass_begin(
@@ -595,12 +590,6 @@ b8 recreate_swapchain(renderer_backend *backend) {
         &context.swapchain
     );
 
-    //sync the framebuf size with the cached ones
-    context.framebuffer_width = context.main_rp.w = cached_framebuf_width;
-    context.framebuffer_height = context.main_rp.h = cached_framebuf_height;
-    cached_framebuf_width = 0;
-    cached_framebuf_height = 0;
-
     //updt framebuf size gen
     context.framebuf_size_last_generation = context.framebuf_size_generation;
 
@@ -612,6 +601,7 @@ b8 recreate_swapchain(renderer_backend *backend) {
     for (u32 i = 0; i < context.swapchain.img_count; i++)
         vulkan_framebuf_destroy(&context, &context.swapchain.framebufs[i]);
 
+    //sync the renderer size with the framebuf size
     context.main_rp.x = 0;
     context.main_rp.y = 0;
     context.main_rp.w = context.framebuffer_width;
