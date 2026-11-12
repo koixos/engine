@@ -35,11 +35,11 @@ typedef union vector3_u {
 } vec3;
 
 typedef union vector4_u {
-#if defined(KUSE_SIMD)
+/*#if defined(KUSE_SIMD)
     //used for SIMD ops
     alignas(16) __m128 data;
 #endif
-    alignas(16) f32 elems[4];   //arr of x, y, z, w
+    alignas(16)*/ f32 elems[4];   //arr of x, y, z, w
     struct {
         union {
             //the first elem
@@ -61,3 +61,12 @@ typedef union vector4_u {
 } vec4;
 
 typedef vec4 quat;
+
+typedef union mat4_u {
+    /*alignas(16)*/ f32 data[16];
+
+/*#if defined(KUSE_SIMD)
+    //used for SIMD ops
+    alignas(16) vec4 rows[4];
+#endif*/
+} mat4;
