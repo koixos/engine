@@ -3,12 +3,12 @@ OBJ_DIR := obj
 
 ASSEMBLY := testbed
 EXTENSION := 
-COMPILER_FLAGS := -g -fdeclspec -fPIC
-INCLUDE_FLAGS := -Iengine/src -I$(VULKAN_SDK)\include
+COMPILER_FLAGS := -g -MD -Werror=vla -fdeclspec -fPIC
+INCLUDE_FLAGS := -Iengine/src -Itestbed\src
 LINKER_FLAGS := -L./$(BUILD_DIR)/ -lengine -Wl,-rpath,.
 DEFINES := -D_DEBUG -DKIMPORT
 
-SRC_FILES := $(shell find $(ASSEMBLY) -name *.c)	#.c files
+SRC_FILES := $(shell find $(ASSEMBLY) -name "*.c")	#.c files
 DIRS := $(shell find $(ASSEMBLY) -type d)			#directories with .h files
 OBJ_FILES := $(SRC_FILES:%=$(OBJ_DIR)/%.o)			#compiled .o objs
 
@@ -23,7 +23,7 @@ scaffold:	#create build dir
 .PHONY: link
 link: scaffold $(OBJ_FILES)	#link
 	@echo Linking $(ASSEMBLY)...
-	@clang $(OBJ_FILES) -o $(BUILD_DIR)/lib$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
+	@clang $(OBJ_FILES) -o $(BUILD_DIR)/$(ASSEMBLY)$(EXTENSION) $(LINKER_FLAGS)
 
 .PHONY: compile
 compile:	#compile .c files
@@ -37,3 +37,5 @@ clean:	#clean build dir
 $(OBJ_DIR)/%.c.o: %.c	#compile .c to .o obj
 	@echo $<...
 	@clang $< $(COMPILER_FLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
+
+-include $(OBJ_FILES:.o=.d)

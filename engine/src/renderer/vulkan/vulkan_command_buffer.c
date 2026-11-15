@@ -79,8 +79,8 @@ void vulkan_cmd_buf_allocate_begin_single_use(
     VkCommandPool pool,
     vulkan_command_buffer *out_cmd_buf
 ) {
-    vulkan_cmd_buf_allocate(context, pool, TRUE, out_cmd_buf);
-    vulkan_cmd_buf_begin(out_cmd_buf, TRUE, FALSE, FALSE);
+    vulkan_cmd_buf_allocate(context, pool, true, out_cmd_buf);
+    vulkan_cmd_buf_begin(out_cmd_buf, true, false, false);
 }
 
 void vulkan_cmd_buf_end_single_use(

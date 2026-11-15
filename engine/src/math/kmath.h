@@ -182,13 +182,13 @@ KINLINE vec2 vec2_normalized(vec2 vec) {
  * @param vec_1 The first vec
  * @param vec_2 The second vec
  * @param tolerance The difference tolerance, typically K_FLOAT_EPS
- * @return TRUE if all differences within tolerance; otherwise FALSE
+ * @return true if all differences within tolerance; otherwise false
  */
 KINLINE b8 vec2_compare(vec2 vec_1, vec2 vec_2, f32 tolerance) {
     if (kabs(vec_1.x - vec_2.x) > tolerance ||
         kabs(vec_1.y - vec_2.y) > tolerance)
-            return FALSE;
-    return TRUE;
+            return false;
+    return true;
 }
 
 /**
@@ -404,14 +404,14 @@ KINLINE vec3 vec3_cross(vec3 vec_1, vec3 vec_2) {
  * @param vec_1 The first vec
  * @param vec_2 The second vec
  * @param tolerance The difference tolerance, typically K_FLOAT_EPS
- * @return TRUE if all differences within tolerance; otherwise FALSE
+ * @return true if all differences within tolerance; otherwise false
  */
 KINLINE b8 vec3_compare(vec3 vec_1, vec3 vec_2, f32 tolerance) {
     if (kabs(vec_1.x - vec_2.x) > tolerance ||
         kabs(vec_1.y - vec_2.y) > tolerance ||
         kabs(vec_1.z - vec_2.z) > tolerance)
-            return FALSE;
-    return TRUE;
+            return false;
+    return true;
 }
 
 /**

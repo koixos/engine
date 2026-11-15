@@ -30,7 +30,7 @@ void vulkan_renderpass_create(
     //attachments
     //TODO: make this configurable
     u32 attachment_description_count = 2;
-    VkAttachmentDescription attachment_descriptions[attachment_description_count];
+    VkAttachmentDescription attachment_descriptions[2]; //TODO: once it was a vla...
 
     //color attachment
     VkAttachmentDescription color_attachment;

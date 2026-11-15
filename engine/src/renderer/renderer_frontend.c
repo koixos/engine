@@ -18,10 +18,10 @@ b8 renderer_init(const char *app_name, struct platform_state *plat_st) {
 
     if (!backend->initialize(backend, app_name, plat_st)) {
         KFATAL("Renderer backend failed to initalize, shutting down!");
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void renderer_shutdown() {
@@ -53,9 +53,9 @@ b8 renderer_draw_frame(renderer_packet *pkt) {
         b8 res = renderer_end_frame(pkt->delta_time);
         if (!res) {
             KERROR("renderer_end_frame() failed, application shutting down...");
-            return FALSE;
+            return false;
         }
     }
 
-    return TRUE;
+    return true;
 }

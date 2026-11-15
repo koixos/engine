@@ -2,6 +2,7 @@
 
 2) sudo apt install libvulkan-dev -- execute this to handle -lvulkan not found error
 
+3) file permission settigns for perm-denied err when executing: chmod u+x program_name
 ---
 
 - son 5 günde platform layer ımın üstüne entry point'imi, event, input, logging ve memory subsystem'larımı implement ettim.
@@ -23,6 +24,7 @@
   />
 </p>
 
+- 12 kasım: custom math lib implementation ını tamamladım. bundan sonraki adım yüksek ihtimal graphical pipeline üzerine çalışmak olacak.
 ---
 **TODOs**
 

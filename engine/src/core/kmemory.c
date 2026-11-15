@@ -14,6 +14,7 @@ struct mem_stats {
 static const char *mem_tag_strs[MEM_TAG_MAX_TAGS] = {
     "UNKNOWN    ",
     "ARRAY      ",
+    "LIN_ALLOC  ",
     "DARRAY     ",
     "DICT       ",
     "RING_QUEUE ",
@@ -49,7 +50,7 @@ void* kallocate(u64 size, mem_tag tag) {
     stats.tagged_allocations[tag] += size;
 
     //TODO: mem alingment
-    void *block = platform_allocate(size, FALSE);
+    void *block = platform_allocate(size, false);
     platform_zero_mem(block, size);
     return block;
 }
@@ -62,7 +63,7 @@ void kfree(void *block, u64 size, mem_tag tag) {
     stats.tagged_allocations[tag] -= size;
 
     //TODO: mem alingment
-    platform_free(block, FALSE);
+    platform_free(block, false);
 }
 
 void* kzero_mem(void *block, u64 size) {

@@ -3,7 +3,7 @@ OBJ_DIR := obj
 
 ASSEMBLY := engine
 EXTENSION := .so
-COMPILER_FLAGS := -g -fdeclspec -fPIC
+COMPILER_FLAGS := -g -MD -Werror=vla -fdeclspec -fPIC
 INCLUDE_FLAGS := -Iengine/src -I$(VULKAN_SDK)/include
 LINKER_FLAGS := -g -shared -lm -lvulkan -lxcb -lX11 -lX11-xcb -lxkbcommon -L$(VULKAN_SDK)/lib -L/usr/X11R6/lib
 DEFINES := -D_DEBUG -DKEXPORT
@@ -30,11 +30,15 @@ link: scaffold $(OBJ_FILES)	#link
 compile:	#compile .c files
 	@echo Compiling...
 
+-include $(OBJ_FILES:.o=.d)
+
 .PHONY: clean
 clean:	#clean build dir
-	rm -rf $(BUILD_DIR)/lib$(ASSEMBLY)$(EXTENSION)
-	rm -rf $(OBJ_DIR)/$(ASSEMBLY)
+	rm -rf $(BUILD_DIR)\$(ASSEMBLY)
+	rm -rf $(OBJ_DIR)\$(ASSEMBLY)
 
 $(OBJ_DIR)/%.c.o: %.c	#compile .c to .o obj
 	@echo $<...
 	@clang $< $(COMPILER_FLAGS) -c -o $@ $(DEFINES) $(INCLUDE_FLAGS)
+
+-include $(OBJ_FILES:.o=.d)

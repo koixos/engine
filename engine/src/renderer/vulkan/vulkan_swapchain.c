@@ -42,13 +42,13 @@ b8 vulkan_swapchain_acquire_next_img_ind(
     if (res == VK_ERROR_OUT_OF_DATE_KHR) {
         //trigger swapchain recreation, then boot out of render loop
         vulkan_swapchain_recreate(context, context->framebuffer_width, context->framebuffer_height, swch);
-        return FALSE;
+        return false;
     } else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) {
         KFATAL("Failed to acquire swapchain image!");
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void vulkan_swapchain_present(
@@ -81,17 +81,16 @@ void vulkan_swapchain_present(
 
 void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *swch) {
     VkExtent2D swch_extent = { width, height };
-    swch->max_frames_in_flight = 2; //triple-buffering mode
 
     //choose a swap surface format
-    b8 found = FALSE;
+    b8 found = false;
     for (u32 i = 0; i < context->dev.swapchain_support.format_count; i++) {
         VkSurfaceFormatKHR format = context->dev.swapchain_support.formats[i];
         //preferred formats
         if (format.format == VK_FORMAT_B8G8R8A8_UNORM &&
             format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 swch->img_format = format;
-                found = TRUE;
+                found = true;
                 break;
         }
     }
@@ -131,6 +130,7 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
         img_count > context->dev.swapchain_support.capabilities.maxImageCount)
             img_count = context->dev.swapchain_support.capabilities.maxImageCount;
     
+    swch->max_frames_in_flight = img_count - 1;
     swch->extent = swch_extent;
 
     //swch create info
@@ -214,7 +214,7 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        TRUE,
+        true,
         VK_IMAGE_ASPECT_DEPTH_BIT,
         &swch->depth_attachment
     );

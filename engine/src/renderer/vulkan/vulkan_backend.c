@@ -92,10 +92,10 @@ b8 vulkan_renderer_backend_init(
     //verify all req.ed layers are available
     for (u32 i = 0; i < req_val_layer_count; i++) {
         KDEBUG("Searching for layer: %s...", req_val_layer_names[i]);
-        b8 found = FALSE;
+        b8 found = false;
         for (u32 j = 0; j < available_layer_count; j++) {
             if (strs_equal(req_val_layer_names[i], available_layers[j].layerName)) {
-                found = TRUE;
+                found = true;
                 KDEBUG("Found.");
                 break;
             }
@@ -103,7 +103,7 @@ b8 vulkan_renderer_backend_init(
         
         if (!found) {
             KFATAL("Required validation layer '%s' is missing!", req_val_layer_names[i]);
-            return FALSE;
+            return false;
         }
     }
 
@@ -144,14 +144,14 @@ b8 vulkan_renderer_backend_init(
     KDEBUG("Creating Vulkan surface...");
     if (!platform_create_vulkan_surface(plat_st, &context)) {
         KERROR("Failed to create platform surface!");
-        return FALSE;
+        return false;
     }
     KINFO("Vulkan surface created.");
 
     //device creation
     if (!vulkan_dev_create(&context)) {
         KERROR("Failed to create the device!");
-        return FALSE;
+        return false;
     }
 
     //create swapchain
@@ -192,7 +192,7 @@ b8 vulkan_renderer_backend_init(
         //create the fence in a signaled st, indicating that the first frame has already been rendered
         // this will prevent the app from waiting indefinitely for first frame to render since
         // it cannot be rendered until a frame is rendered before it
-        vulkan_fence_create(&context, TRUE, &context.in_flight_fences[i]);
+        vulkan_fence_create(&context, true, &context.in_flight_fences[i]);
     }
 
     for (u32 i = 0; i < context.swapchain.img_count; i++)
@@ -206,7 +206,7 @@ b8 vulkan_renderer_backend_init(
         context.imgs_in_flight[i] = 0;
 
     KINFO("Vulkan renderer initialized successfully.");
-    return TRUE;
+    return true;
 }
 
 void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
@@ -317,12 +317,12 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
         VkResult res = vkDeviceWaitIdle(dev->logical_dev);
         if (!vulkan_result_is_success(res)) {
             KERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) failed: '%s'",
-                vulkan_result_string(res, TRUE));
-            return FALSE;
+                vulkan_result_string(res, true));
+            return false;
         }
 
         KINFO("Recreating swapchain, booting...");
-        return FALSE;
+        return false;
     }
 
     //check if the framebuf has been resized; if so, a new swapch must be created
@@ -330,16 +330,16 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
         VkResult res = vkDeviceWaitIdle(dev->logical_dev);
         if (!vulkan_result_is_success(res)) {
             KERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) failed: '%s'",
-                vulkan_result_string(res, TRUE));
-            return FALSE;
+                vulkan_result_string(res, true));
+            return false;
         }
         
         //if the swapch recreation is failed, boot out before unsetting the flag
         if (!recreate_swapchain(backend))
-            return FALSE;
+            return false;
         
         KINFO("Resized, booting...");
-        return FALSE;
+        return false;
     }
 
     //wait for the execution of curr frame to complete, fence being free will allow this one to move on
@@ -349,7 +349,7 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
         UINT64_MAX
     )) {
         KWARN("In-flight fence wait failure.");
-        return FALSE;
+        return false;
     }
 
     //acquire the next img from the swapch, pass along the sem that should be signaled when
@@ -363,12 +363,12 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
         0,
         &context.img_ind
     ))
-        return FALSE;
+        return false;
 
     //begin recording cmds
     vulkan_command_buffer *cmd_buf = &context.graphics_cmd_bufs[context.img_ind];
     vulkan_cmd_buf_reset(cmd_buf);
-    vulkan_cmd_buf_begin(cmd_buf, FALSE, FALSE, FALSE);
+    vulkan_cmd_buf_begin(cmd_buf, false, false, false);
 
     //dynamic st
     VkViewport viewport;
@@ -397,7 +397,7 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
         context.swapchain.framebufs[context.img_ind].handle
     );
 
-    return TRUE;
+    return true;
 }
 
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) {
@@ -463,7 +463,7 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) 
         context.img_ind
     );
 
-    return TRUE;
+    return true;
 }
 
 VkBool32 vk_debug_callback(
@@ -522,7 +522,7 @@ void create_cmd_bufs(renderer_backend *backend) {
         vulkan_cmd_buf_allocate(
             &context,
             context.dev.graphics_cmd_pool,
-            TRUE,
+            true,
             &context.graphics_cmd_bufs[i]    
         );
     }
@@ -555,17 +555,17 @@ b8 recreate_swapchain(renderer_backend *backend) {
     //if already being recreated, dont try again
     if (context.recreating_swch) {
         KDEBUG("recreate_swapchain called when already recreating, booting...");
-        return FALSE;
+        return false;
     }
 
     //detect if the window is too small to be drawn to
     if (context.framebuffer_width == 0 || context.framebuffer_height == 0) {
         KDEBUG("recreate_swapchain called when window is < 1 in a dimension, booting...");
-        return FALSE;
+        return false;
     }
 
     //mark as recreating
-    context.recreating_swch = TRUE;
+    context.recreating_swch = true;
 
     //wait for any ops to complete
     vkDeviceWaitIdle(context.dev.logical_dev);
@@ -612,7 +612,7 @@ b8 recreate_swapchain(renderer_backend *backend) {
     create_cmd_bufs(backend);
 
     //clear the recreating flag
-    context.recreating_swch = FALSE;
+    context.recreating_swch = false;
 
-    return TRUE;
+    return true;
 }

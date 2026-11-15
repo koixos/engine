@@ -8,7 +8,7 @@
 
 b8 vulkan_dev_create(vulkan_context *context) {
     if (!select_physical_dev(context))
-        return FALSE;
+        return false;
 
     KINFO("Creating logical device...");
     //dont create additional queues for shared indices
@@ -19,7 +19,7 @@ b8 vulkan_dev_create(vulkan_context *context) {
         ++ind_count;
     if (!transfer_shares_graphics_queue)
         ++ind_count;
-    u32 indices[ind_count];
+    u32 indices[32];
     u8 ind = 0;
     indices[ind++] = context->dev.graphics_queue_index;
     if (!present_shares_graphics_queue)
@@ -27,7 +27,7 @@ b8 vulkan_dev_create(vulkan_context *context) {
     if (!transfer_shares_graphics_queue)
         indices[ind++] = context->dev.transfer_queue_index;
 
-    VkDeviceQueueCreateInfo queue_create_infos[ind_count];
+    VkDeviceQueueCreateInfo queue_create_infos[32];
     for (u32 i = 0; i < ind_count; i++) {
         queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queue_create_infos[i].queueFamilyIndex = indices[i];
@@ -107,7 +107,7 @@ b8 vulkan_dev_create(vulkan_context *context) {
     ));
     KINFO("Graphics command pool created.");
 
-    return TRUE;
+    return true;
 }
 
 void vulkan_dev_destroy(vulkan_context *context) {
@@ -164,13 +164,14 @@ b8 select_physical_dev(vulkan_context *context) {
     VK_CHECK(vkEnumeratePhysicalDevices(context->inst, &physical_dev_count, 0));
     if (physical_dev_count == 0) {
         KFATAL("No devices with Vulkan support is found!");
-        return FALSE;
+        return false;
     }
 
-    VkPhysicalDevice physical_devs[physical_dev_count];
+    //TODO: below two 32s were vla -> "physical_dev_count"
+    VkPhysicalDevice physical_devs[32];
     VK_CHECK(vkEnumeratePhysicalDevices(context->inst, &physical_dev_count, physical_devs));
 
-    for (u32 i = 0; i < physical_dev_count; i++) {
+    for (u32 i = 0; i < 32; i++) {
         VkPhysicalDeviceProperties props;
         vkGetPhysicalDeviceProperties(physical_devs[i], &props);
 
@@ -182,13 +183,13 @@ b8 select_physical_dev(vulkan_context *context) {
 
         //TODO: these reqs probably should be driven by engine config
         vulkan_physical_device_requirements reqs = {};
-        reqs.graphics = TRUE;
-        reqs.present = TRUE;
-        reqs.transfer = TRUE;
+        reqs.graphics = true;
+        reqs.present = true;
+        reqs.transfer = true;
         //enable this if necessary
-        //reqs.compute = TRUE;
-        reqs.sampler_anisotropy = TRUE;
-        reqs.discrete_gpu = TRUE;
+        //reqs.compute = true;
+        reqs.sampler_anisotropy = true;
+        reqs.discrete_gpu = true;
         reqs.dev_ext_names = darray_create(const char *);
         darray_push(reqs.dev_ext_names, &VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
@@ -263,11 +264,11 @@ b8 select_physical_dev(vulkan_context *context) {
     //ensure a dev is selected
     if (!context->dev.physical_dev) {
         KERROR("No physical devices were found which meet the requirements!");
-        return FALSE;
+        return false;
     }
 
     KINFO("Physical device selected.");
-    return TRUE;
+    return true;
 }
 
 b8 physical_dev_meets_reqs(
@@ -288,13 +289,13 @@ b8 physical_dev_meets_reqs(
     if (reqs->discrete_gpu) {
         if (props->deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             KINFO("Device is not a discrete GPU and one is required, skipping device.");
-            return FALSE;
+            return false;
         }
     }
 
     u32 queue_fam_count = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(dev, &queue_fam_count, 0);
-    VkQueueFamilyProperties queue_fams[queue_fam_count];
+    VkQueueFamilyProperties queue_fams[32]; // was a vla
     vkGetPhysicalDeviceQueueFamilyProperties(dev, &queue_fam_count, queue_fams);
 
     //look at each queue to see what queues it supports
@@ -359,7 +360,7 @@ b8 physical_dev_meets_reqs(
                 if (out_swapchain_supp->present_modes)
                     kfree(out_swapchain_supp->present_modes, sizeof(VkPresentModeKHR) * out_swapchain_supp->present_mode_count, MEM_TAG_RENDERER);
                 KINFO("Required swapchain support not present, skipping device.");
-                return FALSE;    
+                return false;    
             }
 
             //dev exts
@@ -374,10 +375,10 @@ b8 physical_dev_meets_reqs(
                     
                     u32 req_ext_count = darray_length(reqs->dev_ext_names);
                     for (u32 i = 0; i < req_ext_count; i++) {
-                        b8 found = FALSE;
+                        b8 found = false;
                         for (u32 j = 0; j < available_ext_count; j++) {
                             if (strs_equal(reqs->dev_ext_names[i], available_exts[j].extensionName)) {
-                                found = TRUE;
+                                found = true;
                                 break;
                             }
                         }
@@ -385,7 +386,7 @@ b8 physical_dev_meets_reqs(
                         if (!found) {
                             KINFO("Required extension '%s' not found, skipping device.", reqs->dev_ext_names[i]);
                             kfree(available_exts, sizeof(VkExtensionProperties) * available_ext_count, MEM_TAG_RENDERER);
-                            return FALSE;
+                            return false;
                         }
                     } 
                 }
@@ -396,13 +397,13 @@ b8 physical_dev_meets_reqs(
             //sampler anisotropy
             if (reqs->sampler_anisotropy && !features->samplerAnisotropy) {
                 KINFO("Device does not support samplerAnisotropy, skipping device.");
-                return FALSE;
+                return false;
             }
 
-            return TRUE;
+            return true;
     }
     
-    return FALSE;
+    return false;
 }
 
 void vulkan_dev_query_swapchain_supp(
@@ -475,9 +476,9 @@ b8 vulkan_dev_detect_depth_format(vulkan_device *dev) {
         if ((props.linearTilingFeatures & flags) == flags ||
             (props.optimalTilingFeatures & flags) == flags) {
                 dev->depth_format = candidates[i];
-                return TRUE;
+                return true;
         }
     }
 
-    return FALSE;
+    return false;
 }

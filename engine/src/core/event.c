@@ -20,16 +20,16 @@ typedef struct event_sys_state {
 } event_sys_state;
 
 //event sys internal state
-static b8 is_inited = FALSE;
+static b8 is_inited = false;
 static event_sys_state state;
 
 b8 event_init() {
     if (is_inited)
-        return FALSE;
+        return false;
     
     kzero_mem(&state, sizeof(state));
-    is_inited = TRUE;
-    return TRUE;
+    is_inited = true;
+    return true;
 }
 
 void event_shutdown() {
@@ -44,7 +44,7 @@ void event_shutdown() {
 
 b8 event_register(u16 code, void *listener, PFN_on_event on_event) {
     if (!is_inited)
-        return FALSE;
+        return false;
 
     if (state.registered[code].events == 0)
         state.registered[code].events = darray_create(registered_event);
@@ -53,7 +53,7 @@ b8 event_register(u16 code, void *listener, PFN_on_event on_event) {
     for (u64 i = 0; i < registered_count; i++) {
         if (state.registered[code].events[i].listener == listener) {
             //TODO: warn - litener already registered to an event
-            return FALSE;
+            return false;
         }
     }
 
@@ -62,16 +62,16 @@ b8 event_register(u16 code, void *listener, PFN_on_event on_event) {
     event.callback = on_event;
     darray_push(state.registered[code].events, event);
 
-    return TRUE;
+    return true;
 }
 
 b8 event_unregister(u16 code, void *listener, PFN_on_event on_event) {
     if (!is_inited)
-        return FALSE;
+        return false;
 
     if (state.registered[code].events == 0) {
         //TODO: warn - no event registered for this code
-        return FALSE;
+        return false;
     }
 
     u64 registered_count = darray_length(state.registered[code].events);
@@ -80,30 +80,30 @@ b8 event_unregister(u16 code, void *listener, PFN_on_event on_event) {
         if (e.listener == listener && e.callback == on_event) {
             registered_event popped;
             _darray_pop_at(state.registered[code].events, i, &popped);
-            return TRUE;
+            return true;
         }
     }
 
     //not found
-    return FALSE;
+    return false;
 }
 
 b8 event_fire(u16 code, void *sender, event_context data) {
     if (!is_inited)
-        return FALSE;
+        return false;
 
     if (state.registered[code].events == 0) 
-        return FALSE;
+        return false;
     
     u64 registered_count = darray_length(state.registered[code].events);
     for (u64 i = 0; i < registered_count; i++) {
         registered_event e = state.registered[code].events[i];
         if (e.callback(code, sender, e.listener, data)) {
             //msg handled, dont sent to other listeners
-            return TRUE;
+            return true;
         }
     }
 
     //not found
-    return FALSE;
+    return false;
 }

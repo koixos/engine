@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-static b8 is_seeded = FALSE;
+static b8 is_seeded = false;
 
 f32 ksin(f32 x) {
     return sinf(x);
@@ -34,7 +34,7 @@ f32 kabs(f32 x) {
 i32 krand() {
     if (!is_seeded) {
         srand((u32)platform_get_absolute_time());
-        is_seeded = TRUE;
+        is_seeded = true;
     }
     return rand();
 }
@@ -42,7 +42,7 @@ i32 krand() {
 i32 krand_in_range(i32 min, i32 max) {
     if (!is_seeded) {
         srand((u32)platform_get_absolute_time());
-        is_seeded = TRUE;
+        is_seeded = true;
     }
     return (rand() % (max - min + 1)) + min;
 }

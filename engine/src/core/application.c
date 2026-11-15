@@ -21,7 +21,7 @@ typedef struct app_state {
     f64 last_time;
 } app_state;
 
-static b8 inited = FALSE;
+static b8 inited = false;
 static app_state app_st;
 
 //event handlers
@@ -32,7 +32,7 @@ b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context con
 b8 app_create(game *game_inst) {
     if (inited) {
         KERROR("app_create called more than once.");
-        return FALSE;
+        return false;
     }
 
     app_st.game_inst = game_inst;
@@ -41,12 +41,12 @@ b8 app_create(game *game_inst) {
     init_logging();
     init_input();
 
-    app_st.is_running = TRUE;
-    app_st.is_suspended = FALSE;
+    app_st.is_running = true;
+    app_st.is_suspended = false;
 
     if (!event_init()) {
         KERROR("Event system failed initialization. Application cannot continue.");
-        return FALSE;
+        return false;
     }
 
     event_register(EVENT_CODE_APPLICATION_QUIT, 0, app_on_event);
@@ -61,25 +61,25 @@ b8 app_create(game *game_inst) {
             game_inst->app_config.start_pos_y,
             game_inst->app_config.start_width,
             game_inst->app_config.start_height))
-        return FALSE;
+        return false;
 
     //renderer setup
     if (!renderer_init(game_inst->app_config.name, &app_st.platform)) {
         KFATAL("Failed to initialize renderer, aborting application!");
-        return FALSE;
+        return false;
     }
 
     //init game
     if (!app_st.game_inst->init(app_st.game_inst)) {
         KFATAL("Game failed to initialize!");
-        return FALSE;
+        return false;
     }
 
     app_st.game_inst->on_resize(app_st.game_inst, app_st.width, app_st.height);
 
-    inited = TRUE;
+    inited = true;
 
-    return TRUE;
+    return true;
 }
 
 b8 app_run() {
@@ -95,7 +95,7 @@ b8 app_run() {
     
     while (app_st.is_running) {
         if (!platform_pump_msgs(&app_st.platform))
-            app_st.is_running = FALSE;        
+            app_st.is_running = false;        
 
         if (!app_st.is_suspended) {
             //update clk and get delta time
@@ -107,13 +107,13 @@ b8 app_run() {
 
             if (!app_st.game_inst->update(app_st.game_inst, (f32)delta)) {
                 KFATAL("Game update failed, shutting down!");
-                app_st.is_running = FALSE;
+                app_st.is_running = false;
                 break;
             }
 
             if (!app_st.game_inst->render(app_st.game_inst, (f32)delta)) {
                 KFATAL("Game render failed, shutting down!");
-                app_st.is_running = FALSE;
+                app_st.is_running = false;
                 break;
             }
 
@@ -132,7 +132,7 @@ b8 app_run() {
             if (remaining_secs > 0) {
                 u64 remaining_ms = remaining_secs * 1000;
                 //TODO: this may be necessary for release builds, thus turned off
-                b8 limit_frames = FALSE;
+                b8 limit_frames = false;
                 if (remaining_ms > 0 && limit_frames)
                     platform_sleep(remaining_ms - 1);
                 frame_count++;
@@ -149,7 +149,7 @@ b8 app_run() {
         }
     }
 
-    app_st.is_running = FALSE;
+    app_st.is_running = false;
 
     event_unregister(EVENT_CODE_APPLICATION_QUIT, 0, app_on_event);
     event_unregister(EVENT_CODE_KEY_PRESSED, 0, app_on_key);
@@ -161,19 +161,19 @@ b8 app_run() {
     renderer_shutdown();
     platform_shutdown(&app_st.platform);
 
-    return TRUE;
+    return true;
 }
 
 b8 app_on_event(u16 code, void *sender, void *listener_inst, event_context context) {
     switch (code) {
         case EVENT_CODE_APPLICATION_QUIT: {
             KINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
-            app_st.is_running = FALSE;
-            return TRUE;
+            app_st.is_running = false;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context) {
@@ -184,21 +184,13 @@ b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context
                 //technically firing an event to itself, but there may be other listeners
                 event_context data = { };
                 event_fire(EVENT_CODE_APPLICATION_QUIT, 0, data);
-                return TRUE;
-            } else if (key_code == KEY_A)
-                KDEBUG("Explicit - A key pressed!!!!");
-            else
-                KDEBUG("'%c' key pressed in window....", key_code);
+                return true;
+            }
         } break;
-        case EVENT_CODE_KEY_RELEASED: {
-            u16 key_code = context.data.u16[0];
-            if (key_code == KEY_B)
-                KDEBUG("Explicit - B key released!!!!");
-            else
-                KDEBUG("'%c' key released in window....", key_code);
-        } break;
+        case EVENT_CODE_KEY_RELEASED:
+            break;
     }
-    return FALSE;
+    return false;
 }
 
 b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context context) {
@@ -216,13 +208,13 @@ b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context con
             //handle minimization
             if (width == 0 || height == 0) {
                 KINFO("Window minimized, suspending the app...");
-                app_st.is_suspended = TRUE;
-                return TRUE;
+                app_st.is_suspended = true;
+                return true;
             }
 
             if (app_st.is_suspended) {
                 KINFO("Window restored, resuming the app.");
-                app_st.is_suspended = FALSE;
+                app_st.is_suspended = false;
             }
 
             app_st.game_inst->on_resize(app_st.game_inst, width, height);
@@ -231,7 +223,7 @@ b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context con
     }
 
     //event purposely not handled to allow other listeners to get this too
-    return FALSE;
+    return false;
 }
 
 void app_get_framebuf_size(u32 *width, u32 *height) {

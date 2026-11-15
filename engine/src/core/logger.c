@@ -11,7 +11,7 @@
 
 b8 init_logging() {
     //TODO: create a log file
-    return TRUE;
+    return true;
 }
 
 void shutdown_logging() {
@@ -38,7 +38,7 @@ void log_output(log_level lev, const char *msg, ...) {
     }
 
     //format original msg
-    b8 realloced = FALSE;
+    b8 realloced = false;
     while (1) {
         __builtin_va_list arg_ptr;
         va_start(arg_ptr, msg);
@@ -58,11 +58,12 @@ void log_output(log_level lev, const char *msg, ...) {
         } 
 
         buf = temp_buf;
-        realloced = TRUE;
+        realloced = true;
     }
     
-    b32 msg_size = strlen(buf) + strlen(lev_strs[lev]) + 1;
-    char out_msg[msg_size];
+    //trying not to use any vla... thus hard-coding the msg length
+    //b32 msg_size = strlen(buf) + strlen(lev_strs[lev]) + 1;
+    char out_msg[32000];
 
     sprintf(out_msg, "%s%s\n", lev_strs[lev], buf);
 

@@ -6,6 +6,7 @@ typedef enum mem_tag {
     //for temporary use, should be assigned one of the below or have a new tag created
     MEM_TAG_UNKNOWN,
     MEM_TAG_ARRAY,
+    MEM_TAG_LINEAR_ALLOCATOR,
     MEM_TAG_DARRAY,
     MEM_TAG_DICT,
     MEM_TAG_RING_QUEUE,

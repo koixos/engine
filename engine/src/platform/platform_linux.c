@@ -71,7 +71,7 @@ b8 platform_startup(
 
     if (xcb_connection_has_error(state->conn)) {
         KFATAL("Failed to connect to X server via XCB!");
-        return FALSE;
+        return false;
     }
 
     //get data from X server
@@ -216,10 +216,10 @@ b8 platform_startup(
     i32 stream_res = xcb_flush(state->conn);
     if (stream_res <= 0) {
         KFATAL("An error occurred when flushing the stream: %d", stream_res);
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void platform_shutdown(platform_state *st) {
@@ -239,7 +239,7 @@ b8 platform_pump_msgs(platform_state *st) {
     xcb_generic_event_t *event;
     xcb_client_message_event_t *cm;
 
-    b8 quit_flagged = FALSE;
+    b8 quit_flagged = false;
 
     while ((event = xcb_poll_for_event(state->conn))) {
         //inp events
@@ -320,11 +320,11 @@ b8 platform_pump_msgs(platform_state *st) {
                 xcb_atom_t *atoms = (xcb_atom_t *)xcb_get_property_value(reply);
                 int num_atoms = xcb_get_property_value_length(reply) / sizeof(xcb_atom_t);
                         
-                b8 is_hidden = FALSE;
+                b8 is_hidden = false;
                 for (int i = 0; i < num_atoms; ++i) {
                     // is _NET_WM_STATE_HIDDEN in the list?
                     if (atoms[i] == state->wm_net_state_hidden_win) {
-                        is_hidden = TRUE;
+                        is_hidden = true;
                         break;
                     }
                 }
@@ -351,7 +351,7 @@ b8 platform_pump_msgs(platform_state *st) {
                 cm = (xcb_client_message_event_t *)event;
                 //window close
                 if (cm->data.data32[0] == state->wm_delete_win)
-                    quit_flagged = TRUE;
+                    quit_flagged = true;
             } break;
             default:
                 break;
@@ -433,8 +433,7 @@ b8 platform_create_vulkan_surface(platform_state *plat_st, vulkan_context *conte
     VK_CHECK(vkCreateXcbSurfaceKHR(context->inst, &create_info, context->allocator, &state->surface));
 
     context->surface = state->surface;
-    return TRUE;
-
+    return true;
 }
 
 keys translate_keycode(u32 x_keycode) {
@@ -601,9 +600,11 @@ keys translate_keycode(u32 x_keycode) {
             return KEY_LCONTROL;
         case XK_Control_R:
             return KEY_RCONTROL;
-        //case XK_Menu: return KEY_LMENU;
-        case XK_Menu:
-            return KEY_RMENU;
+        case XK_Alt_L:
+            return KEY_LALT;
+        case XK_Alt_R:
+        case XK_ISO_Level3_Shift:
+            return KEY_RALT;
 
         case XK_semicolon:
             return KEY_SEMICOLON;

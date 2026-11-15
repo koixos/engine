@@ -20,18 +20,18 @@ typedef struct input_state {
     mouse_state mouse_prev;
 } input_state;
 
-static b8 is_inited = FALSE;
+static b8 is_inited = false;
 static input_state state = { };
 
 void init_input() {
     kzero_mem(&state, sizeof(input_state));
-    is_inited = TRUE;
+    is_inited = true;
     KINFO("Input subsystem initialized.");
 }
 
 void input_shutdown() {
     //TODO: add shutdown routines
-    is_inited = FALSE;
+    is_inited = false;
 }
 
 void input_update(f64 delta_time) {
@@ -47,26 +47,26 @@ void input_update(f64 delta_time) {
 
 b8 input_is_key_down(keys key) {
     if (!is_inited)
-        return FALSE;
-    return state.keyboard_curr.keys[key] == TRUE;
+        return false;
+    return state.keyboard_curr.keys[key] == true;
 }
 
 b8 input_is_key_up(keys key) {
     if (!is_inited)
-        return TRUE;
-    return state.keyboard_curr.keys[key] == FALSE;
+        return true;
+    return state.keyboard_curr.keys[key] == false;
 }
 
 b8 input_was_key_down(keys key) {
     if (!is_inited)
-        return FALSE;
-    return state.keyboard_prev.keys[key] == TRUE;
+        return false;
+    return state.keyboard_prev.keys[key] == true;
 }
 
 b8 input_was_key_up(keys key) {
     if (!is_inited)
-        return TRUE;
-    return state.keyboard_prev.keys[key] == FALSE;
+        return true;
+    return state.keyboard_prev.keys[key] == false;
 }
 
 void input_process_key(keys key, b8 pressed) {
@@ -85,26 +85,26 @@ void input_process_key(keys key, b8 pressed) {
 
 b8 input_is_btn_down(buttons btn) {
     if (!is_inited)
-        return FALSE;
-    return state.mouse_curr.btns[btn] == TRUE;
+        return false;
+    return state.mouse_curr.btns[btn] == true;
 }
 
 b8 input_is_btn_up(buttons btn) {
     if (!is_inited)
-        return TRUE;
-    return state.mouse_curr.btns[btn] == FALSE;
+        return true;
+    return state.mouse_curr.btns[btn] == false;
 }
 
 b8 input_was_btn_down(buttons btn) {
     if (!is_inited)
-        return FALSE;
-    return state.mouse_prev.btns[btn] == TRUE;
+        return false;
+    return state.mouse_prev.btns[btn] == true;
 }
 
 b8 input_was_btn_up(buttons btn) {
     if (!is_inited)
-        return TRUE;
-    return state.mouse_prev.btns[btn] == FALSE;
+        return true;
+    return state.mouse_prev.btns[btn] == false;
 }
 
 void input_get_mouse_pos(i32 *x, i32 *y) {

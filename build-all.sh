@@ -9,7 +9,6 @@ echo "Building everything..."
 #source build.sh
 #popd
 make -f Makefile.engine.linux.mak all
-
 ERRORLEVEL=$?
 if [ $ERRORLEVEL -ne 0 ]
 then
@@ -20,7 +19,13 @@ fi
 #source build.sh
 #popd
 make -f Makefile.testbed.linux.mak all
+ERRORLEVEL=$?
+if [ $ERRORLEVEL -ne 0 ]
+then
+echo "ERROR:"$ERRORLEVEL && exit
+fi
 
+make -f Makefile.tests.linux.mak all
 ERRORLEVEL=$?
 if [ $ERRORLEVEL -ne 0 ]
 then

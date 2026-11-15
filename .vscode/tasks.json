@@ -33,7 +33,7 @@
             "problemMatcher": [
                 "$gcc"
             ],
-            "group": "build",
+            "group": "build"
         },
         {
             "type": "shell",
@@ -59,7 +59,7 @@
             "type": "shell",
             "label": "Clean Everything",
             "windows": {
-                "command": "${workspaceFolder}/clean-all.bat"
+                "command": "${workspaceFolder}\\clean-all.bat"
             },
             "linux": {
                 "command": "${workspaceFolder}/clean-all.sh"
@@ -69,6 +69,37 @@
             },
             "group": "build"
         },
+        {
+            "type": "shell",
+            "label": "Post-Build",
+            "windows": {
+                "command": "${workspaceFolder}/post-build.bat"
+            },
+            "linux": {
+                "command": "${workspaceFolder}/post-build.sh"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "Build Unit Tests",
+            "windows": {
+                "command": "${workspaceFolder}/tests/build.bat"
+            },
+            "linux": {
+                "command": "${workspaceFolder}/tests/build.sh"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/tests"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        }
     ],
     "version": "2.0.0"
 }
