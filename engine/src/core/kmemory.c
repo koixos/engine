@@ -32,22 +32,39 @@ static const char *mem_tag_strs[MEM_TAG_MAX_TAGS] = {
     "SCENE      "
 };
 
-static struct mem_stats stats;
+typedef struct mem_sys_state {
+    struct mem_stats stats;
+    u64 alloc_count;
+} mem_sys_state;
 
-void init_mem() {
-    platform_zero_mem(&stats, sizeof(stats));
+static mem_sys_state *state_ptr;
+
+b8 init_mem(u64 *mem_requirement, void *st) {
+    *mem_requirement = sizeof(mem_sys_state);
+
+    if (st == 0)
+        return true;
+    
+    state_ptr = st;
+    state_ptr->alloc_count = 0;
+    platform_zero_mem(&state_ptr->stats, sizeof(state_ptr->stats));
+
+    return true;
 }
 
-void shutdown_mem() {
-
+void shutdown_mem(void *st) {
+    state_ptr = 0;
 }
 
 void* kallocate(u64 size, mem_tag tag) {
     if (tag == MEM_TAG_UNKNOWN)
         KWARN("kallocate called using MEM_TAG_UNKNOWN, re-class this allocation");
 
-    stats.total_allocated += size;
-    stats.tagged_allocations[tag] += size;
+    if (state_ptr) {
+        state_ptr->stats.total_allocated += size;
+        state_ptr->stats.tagged_allocations[tag] += size;
+        state_ptr->alloc_count++;
+    }
 
     //TODO: mem alingment
     void *block = platform_allocate(size, false);
@@ -59,8 +76,8 @@ void kfree(void *block, u64 size, mem_tag tag) {
     if (tag == MEM_TAG_UNKNOWN)
         KWARN("kfree called using MEM_TAG_UNKNOWN, re-class this allocation");
 
-    stats.total_allocated -= size;
-    stats.tagged_allocations[tag] -= size;
+    state_ptr->stats.total_allocated -= size;
+    state_ptr->stats.tagged_allocations[tag] -= size;
 
     //TODO: mem alingment
     platform_free(block, false);
@@ -89,19 +106,19 @@ char* get_mem_usage_str() {
     for (u32 i = 0; i < MEM_TAG_MAX_TAGS; i++) {
         char unit[4] = "XiB";
         float amount = 1.0f;
-        if (stats.tagged_allocations[1] >= gib) {
+        if (state_ptr->stats.tagged_allocations[1] >= gib) {
             unit[0] = 'G';
-            amount = stats.tagged_allocations[i] / (float)gib;
-        } else if (stats.tagged_allocations[1] >= mib) {
+            amount = state_ptr->stats.tagged_allocations[i] / (float)gib;
+        } else if (state_ptr->stats.tagged_allocations[1] >= mib) {
             unit[0] = 'M';
-            amount = stats.tagged_allocations[i] / (float)mib;
-        } else if (stats.tagged_allocations[1] >= kib) {
+            amount = state_ptr->stats.tagged_allocations[i] / (float)mib;
+        } else if (state_ptr->stats.tagged_allocations[1] >= kib) {
             unit[0] = 'K';
-            amount = stats.tagged_allocations[i] / (float)kib;
+            amount = state_ptr->stats.tagged_allocations[i] / (float)kib;
         } else {
             unit[0] = 'B';
             unit[1] = 0;
-            amount = (float)stats.tagged_allocations[i];
+            amount = (float)state_ptr->stats.tagged_allocations[i];
         }
 
         i32 written = snprintf(buf + offset, 8000, "  %s: %.2f%s\n", mem_tag_strs[i], amount, unit);
@@ -111,4 +128,10 @@ char* get_mem_usage_str() {
     //TODO: _strdup(buf) for Windows - check platform with ifndef
     char *out_str = str_dup(buf);
     return out_str;
+}
+
+u64 get_mem_alloc_count() {
+    if (state_ptr)
+        return state_ptr->alloc_count;
+    return 0;
 }

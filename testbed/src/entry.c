@@ -1,6 +1,8 @@
 #include "entry.h"
 #include "game.h"
 
+#include <core/kmemory.h>
+
 b8 create_game(game *out_game) {
     out_game->app_config.start_pos_x = 100;
     out_game->app_config.start_pos_y = 100;
@@ -15,6 +17,7 @@ b8 create_game(game *out_game) {
 
     //create game state
     out_game->state = kallocate(sizeof(game_state), MEM_TAG_GAME);
+    out_game->app_state = 0;
 
     return true;
 }

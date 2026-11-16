@@ -9,13 +9,32 @@
 #include <string.h>
 #include <stdarg.h>
 
-b8 init_logging() {
+//TODO: dummy st
+typedef struct logger_sys_state {
+    b8 inited;
+} logger_sys_state;
+
+static logger_sys_state *state_ptr;
+
+b8 init_logging(u64 *mem_requirement, void *st) {
     //TODO: create a log file
+    //TODO: this func always returns true??
+    
+    *mem_requirement = sizeof(logger_sys_state);
+
+    if (st == 0)
+        return true;
+  
+    state_ptr = st;
+    state_ptr->inited = true;
+
     return true;
 }
 
-void shutdown_logging() {
+void shutdown_logging(void *st) {
     //TODO: cleanup logging/write queued entries 
+
+    state_ptr = 0;
 }
 
 void log_output(log_level lev, const char *msg, ...) {

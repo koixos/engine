@@ -24,9 +24,15 @@ typedef enum log_level {
     LOG_LEVEL_TRACE = 5,
 } log_level;
 
-b8 init_logging();
+/**
+ * @brief initializes logging sys - call twice: once with st = 0 to get required mem size,
+ * then a second time passing allocated mem to state
+ * @param mem_requirement A ptr to hold the required mem size of internal state
+ * @param st 0 if just requesting mem requirement, otherwise allocated block of memory
+ */
+b8 init_logging(u64 *mem_requirement, void *st);
 
-void shutdown_logging();
+void shutdown_logging(void *st);
 
 KAPI void log_output(log_level lev, const char *msg, ...);
 

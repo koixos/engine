@@ -26,9 +26,9 @@ typedef enum mem_tag {
     MEM_TAG_MAX_TAGS,
 } mem_tag;
 
-void init_mem();
+b8 init_mem(u64 *mem_requirement, void *st);
 
-void shutdown_mem();
+void shutdown_mem(void *st);
 
 KAPI void* kallocate(u64 size, mem_tag tag);
 
@@ -41,3 +41,5 @@ KAPI void* kcopy_mem(void *dest, const void *src, u64 size);
 KAPI void* kset_mem(void *dest, i32 val, u64 size);
 
 KAPI char* get_mem_usage_str();
+
+KAPI u64 get_mem_alloc_count();
