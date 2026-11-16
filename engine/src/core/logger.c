@@ -6,10 +6,9 @@
 //TODO: temporary
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdarg.h>
 
-//TODO: dummy st
+//TODO: this is dummy st
 typedef struct logger_sys_state {
     b8 inited;
 } logger_sys_state;
@@ -17,23 +16,21 @@ typedef struct logger_sys_state {
 static logger_sys_state *state_ptr;
 
 b8 init_logging(u64 *mem_requirement, void *st) {
-    //TODO: create a log file
     //TODO: this func always returns true??
-    
     *mem_requirement = sizeof(logger_sys_state);
-
+    
     if (st == 0)
-        return true;
-  
+    return true;
+    
     state_ptr = st;
     state_ptr->inited = true;
-
+    
+    //TODO: create a log file
     return true;
 }
 
 void shutdown_logging(void *st) {
     //TODO: cleanup logging/write queued entries 
-
     state_ptr = 0;
 }
 
@@ -52,7 +49,7 @@ void log_output(log_level lev, const char *msg, ...) {
     char *buf = malloc(buf_size * sizeof(char));
 
     if (buf == NULL) {
-        printf("Memory allocation for logger failed\n");
+        KERROR("Memory allocation for logger failed");
         return;
     }
 
@@ -64,14 +61,14 @@ void log_output(log_level lev, const char *msg, ...) {
         b32 written = vsnprintf(buf, buf_size, msg, arg_ptr);
         va_end(arg_ptr);
 
-        //if buffer already realloced
+        //if buffer already realloced or initial size is enough
         if (realloced || written < buf_size)
             break;
 
         buf_size = written + 1;
         char *temp_buf = realloc(buf, buf_size * sizeof(char));
         if (temp_buf == NULL) {
-            printf("Memory allocation for logger failed\n");
+            KERROR("Memory allocation for logger failed");
             free(buf);
             return;
         } 
@@ -80,13 +77,12 @@ void log_output(log_level lev, const char *msg, ...) {
         realloced = true;
     }
     
-    //trying not to use any vla... thus hard-coding the msg length
+    //TODO: trying not to use any vla... thus hard-coding the msg length
+    // thus malloc op becomes useless, should fix this
     //b32 msg_size = strlen(buf) + strlen(lev_strs[lev]) + 1;
     char out_msg[32000];
-
     sprintf(out_msg, "%s%s\n", lev_strs[lev], buf);
 
-    //platform-specific output
     if (is_error)
         platform_console_write_error(out_msg, lev);
     else

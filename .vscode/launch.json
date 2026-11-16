@@ -35,9 +35,9 @@
             "MIMode": "lldb"
         },
 
-        //unit tests
+        //for launching unit tests
         {
-            "name": "(Linux) Launch",
+            "name": "(Linux) Launch Unit Tests",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/tests",
@@ -47,7 +47,7 @@
             "environment": [],
         },
         {
-            "name": "(Windows) Launch",
+            "name": "(Windows) Launch Unit Tests",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/tests.exe",
@@ -58,7 +58,7 @@
             "console": "integratedTerminal",
         },
         {
-            "name": "(macOS) Launch",
+            "name": "(macOS) Launch Unit Tests",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/tests",

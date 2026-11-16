@@ -3,6 +3,8 @@
 
 #include "containers/darray.h"
 
+#define MAX_MSG_CODES 16384
+
 typedef struct registered_event {
     void *listener;
     PFN_on_event callback;
@@ -11,8 +13,6 @@ typedef struct registered_event {
 typedef struct event_code_entry {
     registered_event *events;
 } event_code_entry;
-
-#define MAX_MSG_CODES 16384
 
 typedef struct event_sys_state {
     //lookup table for event codes
@@ -60,6 +60,7 @@ b8 event_register(u16 code, void *listener, PFN_on_event on_event) {
     registered_event event;
     event.listener = listener;
     event.callback = on_event;
+
     darray_push(state.registered[code].events, event);
 
     return true;
@@ -79,7 +80,7 @@ b8 event_unregister(u16 code, void *listener, PFN_on_event on_event) {
         registered_event e = state.registered[code].events[i];
         if (e.listener == listener && e.callback == on_event) {
             registered_event popped;
-            _darray_pop_at(state.registered[code].events, i, &popped);
+            darray_pop_at(state.registered[code].events, i, &popped);
             return true;
         }
     }

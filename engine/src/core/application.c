@@ -45,7 +45,6 @@ b8 app_create(game *game_inst) {
         return false;
     }
 
-    //TODO: what does this mean??
     game_inst->app_state = kallocate(sizeof(app_state), MEM_TAG_APPLICATION);
     app_st = game_inst->app_state;
     app_st->game_inst = game_inst;
@@ -95,7 +94,7 @@ b8 app_create(game *game_inst) {
         return false;
 
     //renderer setup
-    if (!renderer_init(game_inst->app_config.name, &app_st->platform)) {
+    if (!init_renderer(game_inst->app_config.name, &app_st->platform)) {
         KFATAL("Failed to initialize renderer, aborting application!");
         return false;
     }
@@ -191,7 +190,7 @@ b8 app_run() {
     input_shutdown();
     renderer_shutdown();
     platform_shutdown(&app_st->platform);
-    shutdown_mem(&app_st->memory_sys_st);
+    mem_shutdown(&app_st->memory_sys_st);
 
     return true;
 }

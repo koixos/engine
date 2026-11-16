@@ -6,7 +6,7 @@
 struct static_mesh_data;
 struct platform_state;
 
-b8 renderer_init(const char *app_name, struct platform_state *plat_st);
+b8 init_renderer(const char *app_name, struct platform_state *plat_st);
 
 void renderer_shutdown();
 

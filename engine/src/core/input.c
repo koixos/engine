@@ -46,27 +46,19 @@ void input_update(f64 delta_time) {
 //keyboard inp
 
 b8 input_is_key_down(keys key) {
-    if (!is_inited)
-        return false;
-    return state.keyboard_curr.keys[key] == true;
+    return is_inited ? state.keyboard_curr.keys[key] : false;
 }
 
 b8 input_is_key_up(keys key) {
-    if (!is_inited)
-        return true;
-    return state.keyboard_curr.keys[key] == false;
+    return is_inited ? !state.keyboard_curr.keys[key] : true;
 }
 
 b8 input_was_key_down(keys key) {
-    if (!is_inited)
-        return false;
-    return state.keyboard_prev.keys[key] == true;
+    return is_inited ? state.keyboard_prev.keys[key] : false;
 }
 
 b8 input_was_key_up(keys key) {
-    if (!is_inited)
-        return true;
-    return state.keyboard_prev.keys[key] == false;
+    return is_inited ? !state.keyboard_prev.keys[key] : true;
 }
 
 void input_process_key(keys key, b8 pressed) {
@@ -84,27 +76,31 @@ void input_process_key(keys key, b8 pressed) {
 //mouse inp
 
 b8 input_is_btn_down(buttons btn) {
-    if (!is_inited)
-        return false;
-    return state.mouse_curr.btns[btn] == true;
+    return is_inited ? state.mouse_curr.btns[btn] : false;
 }
 
 b8 input_is_btn_up(buttons btn) {
-    if (!is_inited)
-        return true;
-    return state.mouse_curr.btns[btn] == false;
+    return is_inited ? !state.mouse_curr.btns[btn] : true;
 }
 
 b8 input_was_btn_down(buttons btn) {
-    if (!is_inited)
-        return false;
-    return state.mouse_prev.btns[btn] == true;
+    return is_inited ? state.mouse_prev.btns[btn] : false;
 }
 
 b8 input_was_btn_up(buttons btn) {
-    if (!is_inited)
-        return true;
-    return state.mouse_prev.btns[btn] == false;
+    return is_inited ? !state.mouse_prev.btns[btn] : true;
+}
+
+void input_process_btn(buttons btn, b8 pressed) {
+    //if state is actually changed
+    if (state.mouse_curr.btns[btn] != pressed) {
+        state.mouse_curr.btns[btn] = pressed;
+
+        //fire of an event for immediate processing
+        event_context context;
+        context.data.u16[0] = btn;
+        event_fire(pressed ? EVENT_CODE_BUTTON_PRESSED : EVENT_CODE_BUTTON_RELEASED, 0, context);
+    }
 }
 
 void input_get_mouse_pos(i32 *x, i32 *y) {
@@ -129,23 +125,9 @@ void input_get_prev_mouse_pos(i32 *x, i32 *y) {
     *y = state.mouse_prev.y;
 }
 
-void input_process_btn(buttons btn, b8 pressed) {
-    //if state is actually changed
-    if (state.mouse_curr.btns[btn] != pressed) {
-        state.mouse_curr.btns[btn] = pressed;
-
-        //fire of an event for immediate processing
-        event_context context;
-        context.data.u16[0] = btn;
-        event_fire(pressed ? EVENT_CODE_BUTTON_PRESSED : EVENT_CODE_BUTTON_RELEASED, 0, context);
-    }
-}
-
 void input_process_mouse_move(i16 x, i16 y) {
     //if state is actually changed
     if (state.mouse_curr.x != x || state.mouse_curr.y != y) {
-        //KDEBUG("Mouse pos: %i, %i", x, y);
-
         state.mouse_curr.x = x;
         state.mouse_curr.y = y;
 

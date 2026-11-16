@@ -40,6 +40,7 @@ typedef struct mem_sys_state {
 static mem_sys_state *state_ptr;
 
 b8 init_mem(u64 *mem_requirement, void *st) {
+    //TODO: alw returns true
     *mem_requirement = sizeof(mem_sys_state);
 
     if (st == 0)
@@ -47,12 +48,13 @@ b8 init_mem(u64 *mem_requirement, void *st) {
     
     state_ptr = st;
     state_ptr->alloc_count = 0;
+
     platform_zero_mem(&state_ptr->stats, sizeof(state_ptr->stats));
 
     return true;
 }
 
-void shutdown_mem(void *st) {
+void mem_shutdown(void *st) {
     state_ptr = 0;
 }
 
@@ -76,9 +78,11 @@ void kfree(void *block, u64 size, mem_tag tag) {
     if (tag == MEM_TAG_UNKNOWN)
         KWARN("kfree called using MEM_TAG_UNKNOWN, re-class this allocation");
 
-    state_ptr->stats.total_allocated -= size;
-    state_ptr->stats.tagged_allocations[tag] -= size;
-
+    if (state_ptr) {
+        state_ptr->stats.total_allocated -= size;
+        state_ptr->stats.tagged_allocations[tag] -= size;
+    }
+    
     //TODO: mem alingment
     platform_free(block, false);
 }
@@ -105,33 +109,30 @@ char* get_mem_usage_str() {
     
     for (u32 i = 0; i < MEM_TAG_MAX_TAGS; i++) {
         char unit[4] = "XiB";
-        float amount = 1.0f;
-        if (state_ptr->stats.tagged_allocations[1] >= gib) {
+        float amount = state_ptr->stats.tagged_allocations[i];
+        if (amount >= gib) {
             unit[0] = 'G';
-            amount = state_ptr->stats.tagged_allocations[i] / (float)gib;
-        } else if (state_ptr->stats.tagged_allocations[1] >= mib) {
+            amount /= (float)gib;
+        } else if (amount >= mib) {
             unit[0] = 'M';
-            amount = state_ptr->stats.tagged_allocations[i] / (float)mib;
-        } else if (state_ptr->stats.tagged_allocations[1] >= kib) {
+            amount /= (float)mib;
+        } else if (amount >= kib) {
             unit[0] = 'K';
-            amount = state_ptr->stats.tagged_allocations[i] / (float)kib;
+            amount /= (float)kib;
         } else {
             unit[0] = 'B';
             unit[1] = 0;
-            amount = (float)state_ptr->stats.tagged_allocations[i];
+            //amount = (float)amount;
         }
 
         i32 written = snprintf(buf + offset, 8000, "  %s: %.2f%s\n", mem_tag_strs[i], amount, unit);
         offset += written;
     }
 
-    //TODO: _strdup(buf) for Windows - check platform with ifndef
     char *out_str = str_dup(buf);
     return out_str;
 }
 
 u64 get_mem_alloc_count() {
-    if (state_ptr)
-        return state_ptr->alloc_count;
-    return 0;
+    return state_ptr ? state_ptr->alloc_count : 0;
 }

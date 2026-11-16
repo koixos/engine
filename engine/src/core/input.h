@@ -170,11 +170,11 @@ KAPI b8 input_was_btn_down(buttons btn);
 
 KAPI b8 input_was_btn_up(buttons btn);
 
+void input_process_btn(buttons btn, b8 pressed);
+
 KAPI void input_get_mouse_pos(i32 *x, i32 *y);
 
 KAPI void input_get_prev_mouse_pos(i32 *x, i32 *y);
-
-void input_process_btn(buttons btn, b8 pressed);
 
 void input_process_mouse_move(i16 x, i16 y);
 

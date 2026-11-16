@@ -9,7 +9,7 @@ struct platform_state;
 //backend render context
 static renderer_backend *backend = 0;
 
-b8 renderer_init(const char *app_name, struct platform_state *plat_st) {
+b8 init_renderer(const char *app_name, struct platform_state *plat_st) {
     backend = kallocate(sizeof(renderer_backend), MEM_TAG_RENDERER);
 
     //TODO: make this configurable

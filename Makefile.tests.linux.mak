@@ -8,7 +8,7 @@ INCLUDE_FLAGS := -Iengine/src -I$(VULKAN_SDK)\include
 LINKER_FLAGS := -L./$(BUILD_DIR)/ -lengine -Wl,-rpath,.
 DEFINES := -D_DEBUG -DKIMPORT
 
-SRC_FILES := $(shell find $(ASSEMBLY) -name *.c)	#.c files
+SRC_FILES := $(shell find $(ASSEMBLY) -name "*.c")	#.c files
 DIRS := $(shell find $(ASSEMBLY) -type d)			#directories with .h files
 OBJ_FILES := $(SRC_FILES:%=$(OBJ_DIR)/%.o)			#compiled .o objs
 
