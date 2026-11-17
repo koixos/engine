@@ -16,7 +16,6 @@ typedef struct app_state {
     game *game_inst;
     b8 is_running;
     b8 is_suspended;
-    platform_state platform;
     i16 width;
     i16 height;
     clock clock;
@@ -24,12 +23,24 @@ typedef struct app_state {
     linear_allocator systems_allocator;
 
     //subsystems
-
+    
+    u64 event_sys_mem_requirement;
+    void *event_sys_st;
+    
     u64 memory_sys_mem_requirement;
     void *memory_sys_st;
 
     u64 logging_sys_mem_requirement;
     void *logging_sys_st;
+
+    u64 input_sys_mem_requirement;
+    void *input_sys_st;
+
+    u64 platform_sys_mem_requirement;
+    void *platform_sys_st;
+
+    u64 renderer_sys_mem_requirement;
+    void *renderer_sys_st;
 } app_state;
 
 static app_state *app_st;
@@ -56,26 +67,39 @@ b8 app_create(game *game_inst) {
 
     /* init subsystems below */
 
-    init_mem(&app_st->memory_sys_mem_requirement, 0);
+    //event subsystem
+    init_event_sys(&app_st->event_sys_mem_requirement, 0);
+    app_st->event_sys_st = 
+        linear_allocator_allocate(&app_st->systems_allocator, app_st->event_sys_mem_requirement);
+    if (!init_event_sys(&app_st->event_sys_mem_requirement, app_st->event_sys_st)) {
+        KERROR("Failed to init event system; shutting down.");
+        return false;
+    }
+
+    //memory subsystem
+    init_mem_sys(&app_st->memory_sys_mem_requirement, 0);
     app_st->memory_sys_st = 
         linear_allocator_allocate(&app_st->systems_allocator, app_st->memory_sys_mem_requirement);
-    if (!init_mem(&app_st->memory_sys_mem_requirement, app_st->memory_sys_st)) {
+    if (!init_mem_sys(&app_st->memory_sys_mem_requirement, app_st->memory_sys_st)) {
         KERROR("Failed to init memory system; shutting down.");
         return false;
     }
 
-    init_logging(&app_st->logging_sys_mem_requirement, 0);
+    //logging subsystem
+    init_logging_sys(&app_st->logging_sys_mem_requirement, 0);
     app_st->logging_sys_st = 
         linear_allocator_allocate(&app_st->systems_allocator, app_st->logging_sys_mem_requirement);
-    if (!init_logging(&app_st->logging_sys_mem_requirement, app_st->logging_sys_st)) {
+    if (!init_logging_sys(&app_st->logging_sys_mem_requirement, app_st->logging_sys_st)) {
         KERROR("Failed to init logging system; shutting down.");
         return false;
     }
 
-    init_input();
-
-    if (!event_init()) {
-        KERROR("Event system failed initialization. Application cannot continue.");
+    //input subsystem
+    init_input_sys(&app_st->input_sys_mem_requirement, 0);
+    app_st->input_sys_st = 
+        linear_allocator_allocate(&app_st->systems_allocator, app_st->input_sys_mem_requirement);
+    if (!init_input_sys(&app_st->input_sys_mem_requirement, app_st->input_sys_st)) {
+        KERROR("Failed to init input system; shutting down.");
         return false;
     }
 
@@ -84,18 +108,29 @@ b8 app_create(game *game_inst) {
     event_register(EVENT_CODE_KEY_RELEASED, 0, app_on_key);
     event_register(EVENT_CODE_RESIZED, 0, app_on_resized);
 
-    if (!platform_startup(
-            &app_st->platform,
+    //platform subsystem
+    platform_sys_startup(&app_st->platform_sys_mem_requirement, 0, 0, 0, 0, 0, 0);
+    app_st->platform_sys_st = 
+        linear_allocator_allocate(&app_st->systems_allocator, app_st->platform_sys_mem_requirement);
+    if (!platform_sys_startup(
+            &app_st->platform_sys_mem_requirement,
+            app_st->platform_sys_st,
             game_inst->app_config.name,
             game_inst->app_config.start_pos_x,
             game_inst->app_config.start_pos_y,
             game_inst->app_config.start_width,
-            game_inst->app_config.start_height))
+            game_inst->app_config.start_height
+        )) {
+        KERROR("Failed to startup platform system; shutting down.");
         return false;
+    }
 
-    //renderer setup
-    if (!init_renderer(game_inst->app_config.name, &app_st->platform)) {
-        KFATAL("Failed to initialize renderer, aborting application!");
+    //renderer subsystem
+    renderer_sys_init(&app_st->renderer_sys_mem_requirement, 0, 0);
+    app_st->renderer_sys_st = 
+        linear_allocator_allocate(&app_st->systems_allocator, app_st->renderer_sys_mem_requirement);
+    if (!renderer_sys_init(&app_st->renderer_sys_mem_requirement, app_st->renderer_sys_st, game_inst->app_config.name)) {
+        KERROR("Failed to init renderer system; shutting down.");
         return false;
     }
 
@@ -105,6 +140,7 @@ b8 app_create(game *game_inst) {
         return false;
     }
 
+    //calling resize once to ensure the proper size has been set
     game_inst->on_resize(game_inst, app_st->width, app_st->height);
 
     return true;
@@ -112,7 +148,6 @@ b8 app_create(game *game_inst) {
 
 b8 app_run() {
     app_st->is_running = true;
-
     clock_start(&app_st->clock);
     clock_update(&app_st->clock);
     app_st->last_time = app_st->clock.elapsed;
@@ -124,7 +159,7 @@ b8 app_run() {
     KINFO(get_mem_usage_str());
     
     while (app_st->is_running) {
-        if (!platform_pump_msgs(&app_st->platform))
+        if (!platform_pump_msgs())
             app_st->is_running = false;        
 
         if (!app_st->is_suspended) {
@@ -147,7 +182,7 @@ b8 app_run() {
                 break;
             }
 
-            //TODO: this is gross
+            //TODO: this is gross - refactor pkt creation
             renderer_packet pkt;
             pkt.delta_time = delta;
             renderer_draw_frame(&pkt);
@@ -186,22 +221,20 @@ b8 app_run() {
     event_unregister(EVENT_CODE_KEY_RELEASED, 0, app_on_key);
     event_unregister(EVENT_CODE_RESIZED, 0, app_on_resized);
 
-    event_shutdown();
-    input_shutdown();
-    renderer_shutdown();
-    platform_shutdown(&app_st->platform);
-    mem_shutdown(&app_st->memory_sys_st);
+    input_sys_shutdown(app_st->input_sys_st);
+    renderer_sys_shutdown(app_st->renderer_sys_st);
+    platform_sys_shutdown(app_st->platform_sys_st);
+    mem_sys_shutdown(app_st->memory_sys_st);
+    event_sys_shutdown(app_st->event_sys_st);
 
     return true;
 }
 
 b8 app_on_event(u16 code, void *sender, void *listener_inst, event_context context) {
-    switch (code) {
-        case EVENT_CODE_APPLICATION_QUIT: {
-            KINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
-            app_st->is_running = false;
-            return true;
-        }
+    if (code == EVENT_CODE_APPLICATION_QUIT) {
+        KINFO("EVENT_CODE_APPLICATION_QUIT received, shutting down.");
+        app_st->is_running = false;
+        return true;
     }
 
     return false;

@@ -15,7 +15,7 @@ typedef struct logger_sys_state {
 
 static logger_sys_state *state_ptr;
 
-b8 init_logging(u64 *mem_requirement, void *st) {
+b8 init_logging_sys(u64 *mem_requirement, void *st) {
     //TODO: this func always returns true??
     *mem_requirement = sizeof(logger_sys_state);
     
@@ -26,6 +26,7 @@ b8 init_logging(u64 *mem_requirement, void *st) {
     state_ptr->inited = true;
     
     //TODO: create a log file
+    KINFO("Logging subsystem initialized.");
     return true;
 }
 

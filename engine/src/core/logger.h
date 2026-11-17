@@ -30,7 +30,7 @@ typedef enum log_level {
  * @param mem_requirement A ptr to hold the required mem size of internal state
  * @param st 0 if just requesting mem requirement, otherwise allocated block of memory
  */
-b8 init_logging(u64 *mem_requirement, void *st);
+b8 init_logging_sys(u64 *mem_requirement, void *st);
 
 void shutdown_logging(void *st);
 

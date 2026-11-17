@@ -2,13 +2,9 @@
 
 #include "renderer_types.inl"
 
-//forward-declaring
-struct static_mesh_data;
-struct platform_state;
+b8 renderer_sys_init(u64 *mem_requirement, void *st, const char *app_name);
 
-b8 init_renderer(const char *app_name, struct platform_state *plat_st);
-
-void renderer_shutdown();
+void renderer_sys_shutdown(void *st);
 
 void renderer_on_resized(u16 width, u16 height);
 

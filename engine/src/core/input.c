@@ -20,51 +20,58 @@ typedef struct input_state {
     mouse_state mouse_prev;
 } input_state;
 
-static b8 is_inited = false;
-static input_state state = { };
+static input_state *state_ptr;
 
-void init_input() {
-    kzero_mem(&state, sizeof(input_state));
-    is_inited = true;
+b8 init_input_sys(u64 *mem_requirement, void *st) {
+    //TODO: alws returns true
+    *mem_requirement = sizeof(input_state);
+
+    if (st == 0)
+        return true;
+
+    kzero_mem(st, sizeof(input_state));
+    state_ptr = st;
+
     KINFO("Input subsystem initialized.");
+    return true;
 }
 
-void input_shutdown() {
+void input_sys_shutdown(void *st) {
     //TODO: add shutdown routines
-    is_inited = false;
+    state_ptr = 0;
 }
 
 void input_update(f64 delta_time) {
-    if (!is_inited)
+    if (!state_ptr)
         return;
 
     //copy current states to previous states
-    kcopy_mem(&state.keyboard_prev, &state.keyboard_curr, sizeof(keyboard_state));
-    kcopy_mem(&state.mouse_prev, &state.mouse_curr, sizeof(mouse_state));
+    kcopy_mem(&state_ptr->keyboard_prev, &state_ptr->keyboard_curr, sizeof(keyboard_state));
+    kcopy_mem(&state_ptr->mouse_prev, &state_ptr->mouse_curr, sizeof(mouse_state));
 }
 
 //keyboard inp
 
 b8 input_is_key_down(keys key) {
-    return is_inited ? state.keyboard_curr.keys[key] : false;
+    return state_ptr ? state_ptr->keyboard_curr.keys[key] : false;
 }
 
 b8 input_is_key_up(keys key) {
-    return is_inited ? !state.keyboard_curr.keys[key] : true;
+    return state_ptr ? !state_ptr->keyboard_curr.keys[key] : true;
 }
 
 b8 input_was_key_down(keys key) {
-    return is_inited ? state.keyboard_prev.keys[key] : false;
+    return state_ptr ? state_ptr->keyboard_prev.keys[key] : false;
 }
 
 b8 input_was_key_up(keys key) {
-    return is_inited ? !state.keyboard_prev.keys[key] : true;
+    return state_ptr ? !state_ptr->keyboard_prev.keys[key] : true;
 }
 
 void input_process_key(keys key, b8 pressed) {
     //if state is actually changed
-    if (state.keyboard_curr.keys[key] != pressed) {
-        state.keyboard_curr.keys[key] = pressed;
+    if (state_ptr->keyboard_curr.keys[key] != pressed) {
+        state_ptr->keyboard_curr.keys[key] = pressed;
 
         //fire of an event for immediate processing
         event_context context;
@@ -76,25 +83,25 @@ void input_process_key(keys key, b8 pressed) {
 //mouse inp
 
 b8 input_is_btn_down(buttons btn) {
-    return is_inited ? state.mouse_curr.btns[btn] : false;
+    return state_ptr ? state_ptr->mouse_curr.btns[btn] : false;
 }
 
 b8 input_is_btn_up(buttons btn) {
-    return is_inited ? !state.mouse_curr.btns[btn] : true;
+    return state_ptr ? !state_ptr->mouse_curr.btns[btn] : true;
 }
 
 b8 input_was_btn_down(buttons btn) {
-    return is_inited ? state.mouse_prev.btns[btn] : false;
+    return state_ptr ? state_ptr->mouse_prev.btns[btn] : false;
 }
 
 b8 input_was_btn_up(buttons btn) {
-    return is_inited ? !state.mouse_prev.btns[btn] : true;
+    return state_ptr ? !state_ptr->mouse_prev.btns[btn] : true;
 }
 
 void input_process_btn(buttons btn, b8 pressed) {
     //if state is actually changed
-    if (state.mouse_curr.btns[btn] != pressed) {
-        state.mouse_curr.btns[btn] = pressed;
+    if (state_ptr->mouse_curr.btns[btn] != pressed) {
+        state_ptr->mouse_curr.btns[btn] = pressed;
 
         //fire of an event for immediate processing
         event_context context;
@@ -104,32 +111,32 @@ void input_process_btn(buttons btn, b8 pressed) {
 }
 
 void input_get_mouse_pos(i32 *x, i32 *y) {
-    if (!is_inited) {
+    if (!state_ptr) {
         *x = 0;
         *y = 0;
         return;
     }
 
-    *x = state.mouse_curr.x;
-    *y = state.mouse_curr.y;
+    *x = state_ptr->mouse_curr.x;
+    *y = state_ptr->mouse_curr.y;
 }
 
 void input_get_prev_mouse_pos(i32 *x, i32 *y) {
-    if (!is_inited) {
+    if (!state_ptr) {
         *x = 0;
         *y = 0;
         return;
     }
 
-    *x = state.mouse_prev.x;
-    *y = state.mouse_prev.y;
+    *x = state_ptr->mouse_prev.x;
+    *y = state_ptr->mouse_prev.y;
 }
 
 void input_process_mouse_move(i16 x, i16 y) {
     //if state is actually changed
-    if (state.mouse_curr.x != x || state.mouse_curr.y != y) {
-        state.mouse_curr.x = x;
-        state.mouse_curr.y = y;
+    if (state_ptr->mouse_curr.x != x || state_ptr->mouse_curr.y != y) {
+        state_ptr->mouse_curr.x = x;
+        state_ptr->mouse_curr.y = y;
 
         //fire of an event for immediate processing
         event_context context;

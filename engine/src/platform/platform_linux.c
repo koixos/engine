@@ -32,7 +32,7 @@
 
 #include <vulkan/vulkan.h> 
 
-typedef struct internal_state {
+typedef struct platform_state {
     Display *disp;
     xcb_connection_t *conn;
     xcb_window_t window;
@@ -42,40 +42,46 @@ typedef struct internal_state {
     xcb_atom_t wm_net_state_win;
     xcb_atom_t wm_net_state_hidden_win;
     VkSurfaceKHR surface;
-} internal_state;
+} platform_state;
+
+static platform_state *state_ptr;
 
 //key translation
 keys translate_keycode(u32 x_keycode);
 
-b8 platform_startup(
-    platform_state *st,
+b8 platform_sys_startup(
+    u64 *mem_requirement,
+    void *st,
     const char *app_name,
     i32 x,
     i32 y,
     i32 width,
-    i32 height) {
+    i32 height
+) {
+    *mem_requirement = sizeof(platform_state);
 
-    //create internal st
-    st->internal_st = malloc(sizeof(internal_state));
-    internal_state *state = (internal_state *)st->internal_st;
+    if (st == 0)
+        return true;
+
+    state_ptr = st;
 
     //connect to X
-    state->disp = XOpenDisplay(NULL);
+    state_ptr->disp = XOpenDisplay(NULL);
 
     //TODO: this action is global along whole OS, find a better way to avoid key repeats
     //turn off key repeats
-    XAutoRepeatOff(state->disp);
+    XAutoRepeatOff(state_ptr->disp);
 
     //retrieve the conn from disp
-    state->conn = XGetXCBConnection(state->disp);
+    state_ptr->conn = XGetXCBConnection(state_ptr->disp);
 
-    if (xcb_connection_has_error(state->conn)) {
+    if (xcb_connection_has_error(state_ptr->conn)) {
         KFATAL("Failed to connect to X server via XCB!");
         return false;
     }
 
     //get data from X server
-    const struct xcb_setup_t *setup = xcb_get_setup(state->conn);
+    const struct xcb_setup_t *setup = xcb_get_setup(state_ptr->conn);
 
     //loop through screens using iter
     xcb_screen_iterator_t it = xcb_setup_roots_iterator(setup);
@@ -84,10 +90,10 @@ b8 platform_startup(
         xcb_screen_next(&it);
     
     //after screens have been looped through, assign it
-    state->screen = it.data;
+    state_ptr->screen = it.data;
 
     //alloc an XID for window to be created 
-    state->window = xcb_generate_id(state->conn);
+    state_ptr->window = xcb_generate_id(state_ptr->conn);
 
     //filling window bg with a single clr
     u32 event_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
@@ -99,30 +105,30 @@ b8 platform_startup(
                     XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE;
 
     //values to be sent over XCB: bg clr, events
-    u32 val_list[] = { state->screen->black_pixel, event_vals };
+    u32 val_list[] = { state_ptr->screen->black_pixel, event_vals };
 
     //create window
     xcb_void_cookie_t cookie = xcb_create_window(
-        state->conn,
+        state_ptr->conn,
         XCB_COPY_FROM_PARENT,           //depth
-        state->window,
-        state->screen->root,            //parent
+        state_ptr->window,
+        state_ptr->screen->root,            //parent
         x,
         y,
         width,
         height,
         0,                              //no border
         XCB_WINDOW_CLASS_INPUT_OUTPUT,  //class
-        state->screen->root_visual,
+        state_ptr->screen->root_visual,
         event_mask,
         val_list
     );
 
     //change title
     xcb_change_property(
-        state->conn,
+        state_ptr->conn,
         XCB_PROP_MODE_REPLACE,
-        state->window,
+        state_ptr->window,
         XCB_ATOM_WM_NAME,
         XCB_ATOM_STRING,
         8,  //data shoukd be viewed 8 bits at a time
@@ -133,37 +139,37 @@ b8 platform_startup(
     //tell server to notify when window manager
     //attempts to kill the window
     xcb_intern_atom_cookie_t wm_del_cookie = xcb_intern_atom(
-        state->conn,
+        state_ptr->conn,
         0,
         strlen("WM_DELETE_WINDOW"),
         "WM_DELETE_WINDOW"
     );
 
     xcb_intern_atom_cookie_t wm_protocols_cookie = xcb_intern_atom(
-        state->conn,
+        state_ptr->conn,
         0,
         strlen("WM_PROTOCOLS"),
         "WM_PROTOCOLS"
     );
 
     xcb_intern_atom_reply_t *wm_del_reply = xcb_intern_atom_reply(
-        state->conn,
+        state_ptr->conn,
         wm_del_cookie,
         NULL
     );
 
     xcb_intern_atom_reply_t *wm_protocols_reply = xcb_intern_atom_reply(
-        state->conn,
+        state_ptr->conn,
         wm_protocols_cookie,
         NULL
     );
 
-    state->wm_delete_win = wm_del_reply->atom;
-    state->wm_protocols = wm_protocols_reply->atom;
+    state_ptr->wm_delete_win = wm_del_reply->atom;
+    state_ptr->wm_protocols = wm_protocols_reply->atom;
 
     //for window-maximizing
     xcb_intern_atom_cookie_t wm_state_cookie = xcb_intern_atom(
-        state->conn,
+        state_ptr->conn,
         0,
         strlen("_NET_WM_STATE"),
         "_NET_WM_STATE"
@@ -171,31 +177,31 @@ b8 platform_startup(
 
     //for window-minimizing 
     xcb_intern_atom_cookie_t wm_state_hidden_cookie = xcb_intern_atom(
-        state->conn,
+        state_ptr->conn,
         0,
         strlen("_NET_WM_STATE_HIDDEN"),
         "_NET_WM_STATE_HIDDEN"
     );
 
     xcb_intern_atom_reply_t *wm_state_reply = xcb_intern_atom_reply(
-        state->conn,
+        state_ptr->conn,
         wm_state_cookie,
         NULL
     );
 
     xcb_intern_atom_reply_t *wm_state_hidden_reply = xcb_intern_atom_reply(
-        state->conn,
+        state_ptr->conn,
         wm_state_hidden_cookie,
         NULL
     );
 
-    state->wm_net_state_win = wm_state_reply->atom;
-    state->wm_net_state_hidden_win = wm_state_hidden_reply->atom;
+    state_ptr->wm_net_state_win = wm_state_reply->atom;
+    state_ptr->wm_net_state_hidden_win = wm_state_hidden_reply->atom;
 
     xcb_change_property(
-        state->conn,
+        state_ptr->conn,
         XCB_PROP_MODE_REPLACE,
-        state->window,
+        state_ptr->window,
         wm_protocols_reply->atom,
         4,
         32,
@@ -204,7 +210,7 @@ b8 platform_startup(
     );
 
     //map window to screen
-    xcb_map_window(state->conn, state->window);
+    xcb_map_window(state_ptr->conn, state_ptr->window);
 
     //TODO: is needed?
     /*free(wm_del_reply);
@@ -213,35 +219,35 @@ b8 platform_startup(
     free(wm_state_reply);*/
 
     //flush the stream
-    i32 stream_res = xcb_flush(state->conn);
+    i32 stream_res = xcb_flush(state_ptr->conn);
     if (stream_res <= 0) {
         KFATAL("An error occurred when flushing the stream: %d", stream_res);
         return false;
     }
 
+    KINFO("Platform subsystem for Linux initialized.");
     return true;
 }
 
-void platform_shutdown(platform_state *st) {
-    //cold-cast to the known type
-    internal_state *state = (internal_state *)st->internal_st;
-    
-    //dont forget to turn key repeats back on 
-    XAutoRepeatOn(state->disp);
-    
-    xcb_destroy_window(state->conn, state->window);
+void platform_sys_shutdown(void *st) {
+    if (state_ptr) {
+        //dont forget to turn key repeats back on 
+        XAutoRepeatOn(state_ptr->disp);
+        xcb_destroy_window(state_ptr->conn, state_ptr->window);
+    }
+    state_ptr = 0;
 }
 
-b8 platform_pump_msgs(platform_state *st) {
-    //cold-cast to the known type
-    internal_state *state = (internal_state *)st->internal_st;
-    
+b8 platform_pump_msgs() {
+    if (!state_ptr)
+        return true; 
+
     xcb_generic_event_t *event;
     xcb_client_message_event_t *cm;
 
     b8 quit_flagged = false;
 
-    while ((event = xcb_poll_for_event(state->conn))) {
+    while ((event = xcb_poll_for_event(state_ptr->conn))) {
         //inp events
         switch (event->response_type & ~0x80) {
             case XCB_KEY_PRESS:
@@ -252,7 +258,7 @@ b8 platform_pump_msgs(platform_state *st) {
                 b8 pressed = event->response_type == XCB_KEY_PRESS;
                 xcb_keycode_t code = kb_event->detail;
                 KeySym key_sym = XkbKeycodeToKeysym(
-                    state->disp,
+                    state_ptr->disp,
                     (KeyCode)code,  //event.xkey.keycode,
                     0,
                     code & ShiftMask ? 1 : 0
@@ -300,20 +306,20 @@ b8 platform_pump_msgs(platform_state *st) {
             case XCB_PROPERTY_NOTIFY: {
                 //window minimized/restored
                 xcb_property_notify_event_t *prop_event = (xcb_property_notify_event_t *)event;
-                if (prop_event->atom != state->wm_net_state_win)
+                if (prop_event->atom != state_ptr->wm_net_state_win)
                     break;
                     
                 xcb_get_property_cookie_t cookie = xcb_get_property(
-                    state->conn, 
+                    state_ptr->conn, 
                     0, 
-                    state->window, 
-                    state->wm_net_state_win, 
+                    state_ptr->window, 
+                    state_ptr->wm_net_state_win, 
                     XCB_ATOM_ATOM, 
                     0, 
                     1024
                 );
 
-                xcb_get_property_reply_t *reply = xcb_get_property_reply(state->conn, cookie, NULL);
+                xcb_get_property_reply_t *reply = xcb_get_property_reply(state_ptr->conn, cookie, NULL);
                 if (!reply)
                     break;
 
@@ -323,7 +329,7 @@ b8 platform_pump_msgs(platform_state *st) {
                 b8 is_hidden = false;
                 for (int i = 0; i < num_atoms; ++i) {
                     // is _NET_WM_STATE_HIDDEN in the list?
-                    if (atoms[i] == state->wm_net_state_hidden_win) {
+                    if (atoms[i] == state_ptr->wm_net_state_hidden_win) {
                         is_hidden = true;
                         break;
                     }
@@ -337,8 +343,8 @@ b8 platform_pump_msgs(platform_state *st) {
                     context.data.u16[1] = 0;
                     event_fire(EVENT_CODE_RESIZED, 0, context);
                 } else {
-                    xcb_get_geometry_cookie_t geom_cookie = xcb_get_geometry(state->conn, state->window);
-                    xcb_get_geometry_reply_t *geom = xcb_get_geometry_reply(state->conn, geom_cookie, 0);
+                    xcb_get_geometry_cookie_t geom_cookie = xcb_get_geometry(state_ptr->conn, state_ptr->window);
+                    xcb_get_geometry_reply_t *geom = xcb_get_geometry_reply(state_ptr->conn, geom_cookie, 0);
                     if (geom) {
                         context.data.u16[0] = geom->width;
                         context.data.u16[1] = geom->height;
@@ -350,7 +356,7 @@ b8 platform_pump_msgs(platform_state *st) {
             case XCB_CLIENT_MESSAGE: {
                 cm = (xcb_client_message_event_t *)event;
                 //window close
-                if (cm->data.data32[0] == state->wm_delete_win)
+                if (cm->data.data32[0] == state_ptr->wm_delete_win)
                     quit_flagged = true;
             } break;
             default:
@@ -422,17 +428,17 @@ void platform_get_required_ext_names(const char ***names_darr) {
 }
 
 //surface creation for vulkan
-b8 platform_create_vulkan_surface(platform_state *plat_st, vulkan_context *context) {
-    //cold-cast to the known type
-    internal_state *state = (internal_state *)plat_st->internal_st;
+b8 platform_create_vulkan_surface(vulkan_context *context) {
+    if (!state_ptr)
+        return false;
 
     VkXcbSurfaceCreateInfoKHR create_info = { VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR };
-    create_info.connection = state->conn;
-    create_info.window = state->window;
+    create_info.connection = state_ptr->conn;
+    create_info.window = state_ptr->window;
 
-    VK_CHECK(vkCreateXcbSurfaceKHR(context->inst, &create_info, context->allocator, &state->surface));
-
-    context->surface = state->surface;
+    VK_CHECK(vkCreateXcbSurfaceKHR(context->inst, &create_info, context->allocator, &state_ptr->surface));
+    context->surface = state_ptr->surface;
+    
     return true;
 }
 

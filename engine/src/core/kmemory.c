@@ -39,7 +39,7 @@ typedef struct mem_sys_state {
 
 static mem_sys_state *state_ptr;
 
-b8 init_mem(u64 *mem_requirement, void *st) {
+b8 init_mem_sys(u64 *mem_requirement, void *st) {
     //TODO: alw returns true
     *mem_requirement = sizeof(mem_sys_state);
 
@@ -51,10 +51,11 @@ b8 init_mem(u64 *mem_requirement, void *st) {
 
     platform_zero_mem(&state_ptr->stats, sizeof(state_ptr->stats));
 
+    KINFO("Memory subsystem initialized.");
     return true;
 }
 
-void mem_shutdown(void *st) {
+void mem_sys_shutdown(void *st) {
     state_ptr = 0;
 }
 

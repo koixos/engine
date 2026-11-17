@@ -9,16 +9,9 @@ typedef enum renderer_backend_type {
 } renderer_backend_type;
 
 typedef struct renderer_backend {
-    //forward-declaring
-    struct platform_state *plat_st;
-
     u64 frame_num;
 
-    b8 (*initialize)(
-        struct renderer_backend *backend,
-        const char *app_name,
-        struct platform_state *plat_st        
-    );
+    b8 (*initialize)(struct renderer_backend *backend, const char *app_name);
 
     void (*shutdown)(struct renderer_backend *backend);
 

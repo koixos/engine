@@ -26,11 +26,7 @@ void regenerate_framebufs(renderer_backend *backend, vulkan_swapchain *swapch, v
 
 b8 recreate_swapchain(renderer_backend *backend);
 
-b8 vulkan_renderer_backend_init(
-    renderer_backend *backend,
-    const char *app_name,
-    struct platform_state *plat_st
-) {
+b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name) {
     //func ptrs
     context.find_mem_ind = find_mem_ind;
 
@@ -142,7 +138,7 @@ b8 vulkan_renderer_backend_init(
 
     //surface
     KDEBUG("Creating Vulkan surface...");
-    if (!platform_create_vulkan_surface(plat_st, &context)) {
+    if (!platform_create_vulkan_surface(&context)) {
         KERROR("Failed to create platform surface!");
         return false;
     }

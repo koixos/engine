@@ -142,9 +142,9 @@ typedef enum keys {
     KEYS_MAX_KEYS
 } keys;
 
-void init_input();
+b8 init_input_sys(u64 *mem_requirement, void *st);
 
-void input_shutdown();
+void input_sys_shutdown(void *st);
 
 void input_update(f64 delta_time);
 
