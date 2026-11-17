@@ -29,6 +29,7 @@
 - 13 kasım: devam etmeden önce projede değiştirmek gereken ufak tefek detaylarla ilgilendim (TRUE/FALSE macro kullanımı, vla kullanımının kaldırılması, ufak makefile değişiklikleri).
 - Ayrıca mem subsys'a lin.allocator eklendi. bu sayede ihtiyaç duyulan alan mem fragmentation veya free vb endişeleri olmadan allocate edilebilecek [reading](https://nfrechette.github.io/2015/05/21/linear_allocator/).
 - Son olarak unit test geliştirmek ve gerçekleştirmek için bir test env kurdum. bu sayede oluşturduğum component'ları kendi içlerinde test edip herhangi bir bug veya error var mı tespit edebiliyorum. 
+- subsystem'ların memory yönetim şeklini değiştirdim. artık her bir subsystem aynı vulkan componentları için mem ayırırken yapmamız gerektiği gibi double-call ile initialize edilmeli.
 
 ---
 **TODOs**

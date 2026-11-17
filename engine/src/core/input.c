@@ -70,7 +70,7 @@ b8 input_was_key_up(keys key) {
 
 void input_process_key(keys key, b8 pressed) {
     //if state is actually changed
-    if (state_ptr->keyboard_curr.keys[key] != pressed) {
+    if (state_ptr && state_ptr->keyboard_curr.keys[key] != pressed) {
         state_ptr->keyboard_curr.keys[key] = pressed;
 
         //fire of an event for immediate processing
