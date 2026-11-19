@@ -11,6 +11,8 @@
         KASSERT(expr == VK_SUCCESS);    \
     }
 
+#define OBJ_SHADER_STAGE_COUNT 2
+
 typedef struct vulkan_swapchain_support_info {
     VkSurfaceCapabilitiesKHR capabilities;
     u32 format_count;
@@ -108,6 +110,24 @@ typedef struct vulkan_fence {
     b8 is_signaled;
 } vulkan_fence;
 
+typedef struct vulkan_shader_stage {
+    VkShaderModuleCreateInfo create_info;
+    VkShaderModule handle;
+    VkPipelineShaderStageCreateInfo shader_stage_create_info;
+} vulkan_shader_stage;
+
+typedef struct vulkan_pipeline {
+    VkPipeline handle;
+    VkPipelineLayout pipeline_layout;
+} vulkan_pipeline;
+
+typedef struct vulkan_obj_shader {
+    //vertex, fragment
+    vulkan_shader_stage stages[OBJ_SHADER_STAGE_COUNT];
+
+    vulkan_pipeline pipeline;
+} vulkan_obj_shader;
+
 typedef struct vulkan_context {
     VkInstance inst;
     VkAllocationCallbacks *allocator;
@@ -139,7 +159,7 @@ typedef struct vulkan_context {
     vulkan_renderpass main_rp;
     vulkan_command_buffer *graphics_cmd_bufs;   //darr
 
-    //darr
+    //darr.s
 
     VkSemaphore *img_available_sems;
     VkSemaphore *queue_complete_sems;
@@ -148,6 +168,8 @@ typedef struct vulkan_context {
     vulkan_fence *in_flight_fences;
     //holds ptrs to fences which exist and are owned elsewhere
     vulkan_fence **imgs_in_flight;
+
+    vulkan_obj_shader obj_shader;
     
     i32 (*find_mem_ind)(u32 type_filter, u32 property_flags);
 } vulkan_context;

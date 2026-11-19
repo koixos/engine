@@ -1,19 +1,30 @@
 #include "logger.h"
 #include "asserts.h"
+#include "kstring.h"
+#include "kmemory.h"
 
 #include "platform/platform.h"
+#include "platform/filesystem.h"
 
 //TODO: temporary
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 
 //TODO: this is dummy st
 typedef struct logger_sys_state {
-    b8 inited;
+    file_handle logfile_handle;
 } logger_sys_state;
 
 static logger_sys_state *state_ptr;
+
+void append2logfile(const char *msg) {
+    if (state_ptr && state_ptr->logfile_handle.is_valid) {
+        //since msg already contains a '\n', just write the bytes directly
+        u64 len = str_len(msg);
+        u64 written = 0;
+        if (!filesystem_write(&state_ptr->logfile_handle, len, msg, &written)) 
+            platform_console_write_error("Error when writing to console.log.", LOG_LEVEL_ERROR);
+    }
+}
 
 b8 init_logging_sys(u64 *mem_requirement, void *st) {
     //TODO: this func always returns true??
@@ -23,9 +34,12 @@ b8 init_logging_sys(u64 *mem_requirement, void *st) {
     return true;
     
     state_ptr = st;
-    state_ptr->inited = true;
-    
-    //TODO: create a log file
+
+    if (!filesystem_open("console.log", FILE_MODE_WRITE, false, &state_ptr->logfile_handle)) {
+        platform_console_write_error("ERROR: Unable to open console.log for writing.", LOG_LEVEL_ERROR);
+        return false;
+    }
+
     KINFO("Logging subsystem initialized.");
     return true;
 }
@@ -36,6 +50,8 @@ void shutdown_logging(void *st) {
 }
 
 void log_output(log_level lev, const char *msg, ...) {
+    //TODO: str ops are all pretty slow, thus it needs to be
+    // moved to another thread eventually, along w/ the file writes
     const char *lev_strs[6] = {
         "[FATAL]: ",
         "[ERROR]: ",
@@ -46,50 +62,26 @@ void log_output(log_level lev, const char *msg, ...) {
     };
     b8 is_error = lev < LOG_LEVEL_WARN;
 
-    i32 buf_size = 32000;
-    char *buf = malloc(buf_size * sizeof(char));
-
-    if (buf == NULL) {
-        KERROR("Memory allocation for logger failed");
-        return;
-    }
+    //TODO: well u shouldnt be doing this but instead of using malloc this better...
+    char out_msg[32000];
+    kzero_mem(out_msg, sizeof(out_msg));
 
     //format original msg
     b8 realloced = false;
-    while (1) {
-        __builtin_va_list arg_ptr;
-        va_start(arg_ptr, msg);
-        b32 written = vsnprintf(buf, buf_size, msg, arg_ptr);
-        va_end(arg_ptr);
+    __builtin_va_list arg_ptr;
+    va_start(arg_ptr, msg);
+    string_format_v(out_msg, msg, arg_ptr);
+    va_end(arg_ptr);
 
-        //if buffer already realloced or initial size is enough
-        if (realloced || written < buf_size)
-            break;
-
-        buf_size = written + 1;
-        char *temp_buf = realloc(buf, buf_size * sizeof(char));
-        if (temp_buf == NULL) {
-            KERROR("Memory allocation for logger failed");
-            free(buf);
-            return;
-        } 
-
-        buf = temp_buf;
-        realloced = true;
-    }
-    
-    //TODO: trying not to use any vla... thus hard-coding the msg length
-    // thus malloc op becomes useless, should fix this
-    //b32 msg_size = strlen(buf) + strlen(lev_strs[lev]) + 1;
-    char out_msg[32000];
-    sprintf(out_msg, "%s%s\n", lev_strs[lev], buf);
+    string_format(out_msg, "%s%s\n", lev_strs[lev], out_msg);
 
     if (is_error)
         platform_console_write_error(out_msg, lev);
     else
         platform_console_write(out_msg, lev);
 
-    free(buf);
+    //queue a copy to be written to the log file
+    append2logfile(out_msg);
 }
 
 void report_assertion_failure(const char *expr, const char *msg, const char *file, i32 line) {

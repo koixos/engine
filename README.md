@@ -31,6 +31,7 @@
 - Son olarak unit test geliştirmek ve gerçekleştirmek için bir test env kurdum. bu sayede oluşturduğum component'ları kendi içlerinde test edip herhangi bir bug veya error var mı tespit edebiliyorum. 
 - subsystem'ların memory yönetim şeklini değiştirdim. artık her bir subsystem aynı vulkan componentları için mem ayırırken yapmamız gerektiği gibi double-call ile initialize edilmeli.
 
+- 17 kasım: vulkan shader setup başlandı
 ---
 **TODOs**
 

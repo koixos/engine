@@ -15,6 +15,9 @@
 
 #include "containers/darray.h"
 
+//shaders
+#include "shaders/vulkan_obj_shader.h"
+
 //static Vulkan context
 static vulkan_context context;
 
@@ -201,6 +204,12 @@ b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name)
     for (u32 i = 0; i < context.swapchain.img_count; i++)
         context.imgs_in_flight[i] = 0;
 
+    //create builtin shaders
+    if (!vulkan_obj_shader_create(&context, &context.obj_shader)) {
+        KERROR("Error loading built-in basic_lighting shader.");
+        return false;
+    }
+
     KINFO("Vulkan renderer initialized successfully.");
     return true;
 }
@@ -210,6 +219,8 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
     vkDeviceWaitIdle(context.dev.logical_dev);
 
     //destroy in the opposite order of creation
+
+    
 
     KDEBUG("Destroying Vulkan synchronization objects...");
     for (u8 i = 0; i < context.swapchain.max_frames_in_flight; i++) {
