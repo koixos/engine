@@ -7,6 +7,7 @@
 #include "vulkan_framebuffer.h"
 #include "vulkan_fence.h"
 #include "vulkan_utils.h"
+#include "vulkan_buffer.h"
 
 #include "core/logger.h"
 #include "core/kstring.h"
@@ -14,6 +15,8 @@
 #include "core/application.h"
 
 #include "containers/darray.h"
+
+#include "math/math_types.h"
 
 //shaders
 #include "shaders/vulkan_obj_shader.h"
@@ -28,6 +31,8 @@ void create_cmd_bufs(renderer_backend *backend);
 void regenerate_framebufs(renderer_backend *backend, vulkan_swapchain *swapch, vulkan_renderpass *rp);
 
 b8 recreate_swapchain(renderer_backend *backend);
+
+b8 create_bufs(vulkan_context *context);
 
 b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name) {
     //func ptrs
@@ -210,6 +215,12 @@ b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name)
         return false;
     }
 
+    //create buffers
+    if (!create_bufs(&context)) {
+        KERROR("Error creating Vulkan buffers.");
+        return false;
+    }
+
     KINFO("Vulkan renderer initialized successfully.");
     return true;
 }
@@ -219,6 +230,10 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
     vkDeviceWaitIdle(context.dev.logical_dev);
 
     //destroy in the opposite order of creation
+
+    KDEBUG("Destroying Vulkan buffers...");
+    vulkan_buffer_destroy(&context, &context.obj_vert_buf);
+    vulkan_buffer_destroy(&context, &context.obj_ind_buf);
 
     KDEBUG("Destroying Vulkan object shaders...");
     vulkan_obj_shader_destroy(&context, &context.obj_shader);
@@ -621,6 +636,42 @@ b8 recreate_swapchain(renderer_backend *backend) {
 
     //clear the recreating flag
     context.recreating_swch = false;
+
+    return true;
+}
+
+b8 create_bufs(vulkan_context *context) {
+    VkMemoryPropertyFlagBits mem_prop_flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    const u64 vert_buf_size = sizeof(vertex_3d) * 1024 * 1024;
+    if (!vulkan_buffer_create(
+        context,
+        vert_buf_size,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        mem_prop_flags,
+        true,
+        &context->obj_vert_buf
+    )) {
+        KERROR("Error creating vertex buffer");
+        return false;
+    }
+    context->geometry_vert_offset = 0;
+
+    const u64 ind_buf_size = sizeof(u32) * 1024 * 1024;
+    if (!vulkan_buffer_create(
+        context,
+        ind_buf_size,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        mem_prop_flags,
+        true,
+        &context->obj_ind_buf
+    )) {
+        KERROR("Error creating index buffer");
+        return false;
+    }
+    context->geometry_ind_offset = 0;
+
+    KINFO("Vulkan buffers created.");
 
     return true;
 }

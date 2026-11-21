@@ -13,6 +13,16 @@
 
 #define OBJ_SHADER_STAGE_COUNT 2
 
+typedef struct vulkan_buffer {
+    u64 total_size;
+    VkBuffer handle;
+    VkBufferUsageFlagBits usg;
+    b8 is_locked;
+    VkDeviceMemory mem;
+    i32 mem_ind;
+    u32 mem_prop_flags;
+} vulkan_buffer;
+
 typedef struct vulkan_swapchain_support_info {
     VkSurfaceCapabilitiesKHR capabilities;
     u32 format_count;
@@ -158,6 +168,12 @@ typedef struct vulkan_context {
 
     vulkan_renderpass main_rp;
     vulkan_command_buffer *graphics_cmd_bufs;   //darr
+
+    vulkan_buffer obj_vert_buf;
+    vulkan_buffer obj_ind_buf;
+    
+    u64 geometry_vert_offset;
+    u64 geometry_ind_offset;
 
     //darr.s
 
