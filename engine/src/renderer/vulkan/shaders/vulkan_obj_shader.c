@@ -1,8 +1,12 @@
 #include "vulkan_obj_shader.h"
 
 #include "core/logger.h"
+#include "core/kmemory.h"
 
 #include "renderer/vulkan/vulkan_shader_utils.h"
+#include "renderer/vulkan/vulkan_pipeline.h"
+
+#include "math/math_types.h"
 
 #define BUILTIN_SHADER_NAME_OBJ "Builtin_ObjShader" //must be same name within the post-build file
 
@@ -28,13 +32,85 @@ b8 vulkan_obj_shader_create(vulkan_context *context, vulkan_obj_shader *out_shad
         }
     }
 
-    //descriptors
+    //TODO: descriptors
     
+    /* pipeline creation */
+    
+    //viewport
+    VkViewport vp;
+    vp.x = 0.0f;
+    vp.y = (f32)context->framebuffer_height;
+    vp.width = (f32)context->framebuffer_width;
+    vp.height = -(f32)context->framebuffer_height;
+    vp.minDepth = 0.0f;
+    vp.maxDepth = 1.0f;
+
+    //scissor
+    VkRect2D scissor;
+    scissor.offset.x = scissor.offset.y = 0;
+    scissor.extent.width = context->framebuffer_width;
+    scissor.extent.height = context->framebuffer_height;
+
+    //attributes
+    u32 offset = 0;
+    const i32 attr_count = 1;
+    VkVertexInputAttributeDescription attr_descs[1]; //[attr_count]
+    //position
+    VkFormat formats[1] = { //[attr_count]
+        VK_FORMAT_R32G32B32_SFLOAT
+    };
+
+    u64 sizes[1] = { //[attr_count]
+        sizeof(vec3)
+    };
+
+    for (u32 i = 0; i < attr_count; i++) {
+        attr_descs[i].binding = 0;  //binding ind - should match binding desc
+        attr_descs[i].location = i; //attr loc
+        attr_descs[i].format = formats[i];
+        attr_descs[i].offset = offset;
+        offset += sizes[i];
+    }
+
+    //TODO: desc set layouts
+
+    //stages - should match the # of shader->stages
+    VkPipelineShaderStageCreateInfo stage_create_infos[OBJ_SHADER_STAGE_COUNT];
+    kzero_mem(stage_create_infos, sizeof(stage_create_infos));
+    for (u32 i = 0; i < OBJ_SHADER_STAGE_COUNT; i++) {
+        //stage_create_infos[i].sType = out_shader->stages[i].shader_stage_create_info.sType;
+        stage_create_infos[i] = out_shader->stages[i].shader_stage_create_info;
+    }
+
+    if (!vulkan_pipeline_create(
+        context,
+        &context->main_rp,
+        attr_count,
+        attr_descs,
+        0,
+        0,
+        OBJ_SHADER_STAGE_COUNT,
+        stage_create_infos,
+        vp,
+        scissor,
+        false,
+        &out_shader->pipeline
+    )) {
+        KERROR("Failed to load graphics pipeline for object shader.");
+        return false;
+    }
+
     return true;
 }
 
 void vulkan_obj_shader_destroy(vulkan_context *context, struct vulkan_obj_shader *shader) {
-
+    vulkan_pipeline_destroy(context, &shader->pipeline);
+    
+    //destroy shader modules
+    for (u32 i = 0; i < OBJ_SHADER_STAGE_COUNT; i++) {
+        vkDestroyShaderModule(context->dev.logical_dev, shader->stages[i].handle, context->allocator);
+        shader->stages[i].handle = 0;
+    }
 }
 
 void vulkan_obj_shader_use(vulkan_context *context, struct vulkan_obj_shader *shader) {

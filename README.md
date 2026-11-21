@@ -32,6 +32,8 @@
 - subsystem'ların memory yönetim şeklini değiştirdim. artık her bir subsystem aynı vulkan componentları için mem ayırırken yapmamız gerektiği gibi double-call ile initialize edilmeli.
 
 - 17 kasım: vulkan shader setup başlandı
+
+- 20 kasım: graphics pipeline imp'e başladım birkaç gün önce ve devam ediyorum. allah kahretmesin çok uzun sürüyor. ÇÜNKÜ DOĞRU DÜZGÜN ÇALIŞAMADIM. yetmezmiş gibi spec'in ilgili kısımlarını okumam gerek. hayat neden bu kadar zorsun ki...
 ---
 **TODOs**
 
