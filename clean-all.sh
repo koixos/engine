@@ -2,7 +2,6 @@
 
 echo "Cleaning everything..."
 
-
 make -f "Makefile.engine.linux.mak" clean
 ERRORLEVEL=$?
 if [ $ERRORLEVEL -ne 0 ]
@@ -25,6 +24,5 @@ if [ $ERRORLEVEL -ne 0 ]
 then
 echo "ERROR:"$ERRORLEVEL && exit
 fi
-
 
 echo "All assemblies cleaned successfully."

@@ -1,1 +1,1 @@
-#TODO: fill build-all-macos
+#TODO: fill build-all-macos.sh

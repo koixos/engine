@@ -8,11 +8,11 @@ int main() {
     //alw init the manager first
     test_manager_init();
 
-    //TODO: add test registrations here
+    /* add test registrations below */
+
     linear_allocator_register_tests();
 
     KDEBUG("Starting tests...");
-
     test_manager_run_tests();
 
     return 0;

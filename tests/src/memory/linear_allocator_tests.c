@@ -5,6 +5,27 @@
 
 #include <memory/linear_allocator.h>
 
+/* priv funcs */
+u8 linear_allocator_should_create_and_destroy();
+u8 linear_allocator_single_allocation_all_space();
+u8 linear_allocator_multi_allocation_all_space();
+u8 linear_allocator_multi_allocation_over_allocate();
+u8 linear_allocator_multi_allocation_all_space_and_free();
+/* ---------- */
+
+void linear_allocator_register_tests() {
+    test_manager_register_test(linear_allocator_should_create_and_destroy,
+        "Linear allocator should create and destroy");
+    test_manager_register_test(linear_allocator_single_allocation_all_space,
+        "Linear allocator single alloc for all space");
+    test_manager_register_test(linear_allocator_multi_allocation_all_space,
+        "Linear allocator multi alloc for all space");
+    test_manager_register_test(linear_allocator_multi_allocation_over_allocate,
+        "Linear allocator try over-allocate");
+    test_manager_register_test(linear_allocator_multi_allocation_all_space_and_free,
+        "Linear allocator allocated space should be 0 after free");
+}
+
 u8 linear_allocator_should_create_and_destroy() {
     linear_allocator alloc;
     linear_allocator_create(sizeof(u64), 0, &alloc);
@@ -42,9 +63,8 @@ u8 linear_allocator_multi_allocation_all_space() {
     linear_allocator alloc;
     linear_allocator_create(sizeof(u64) * max_allocs, 0, &alloc);
 
-    void *block;
     for (u64 i = 0; i < max_allocs; i++) {
-        block = linear_allocator_allocate(&alloc, sizeof(u64));
+        void *block = linear_allocator_allocate(&alloc, sizeof(u64));
         expect_should_not_be(0, block);
         expect_should_be(sizeof(u64) * (i+1), alloc.allocated);
     }
@@ -85,9 +105,8 @@ u8 linear_allocator_multi_allocation_all_space_and_free() {
     linear_allocator alloc;
     linear_allocator_create(sizeof(u64) * max_allocs, 0, &alloc);
 
-    void *block;
     for (u64 i = 0; i < max_allocs; i++) {
-        block = linear_allocator_allocate(&alloc, sizeof(u64));
+        void *block = linear_allocator_allocate(&alloc, sizeof(u64));
         expect_should_not_be(0, block);
         expect_should_be(sizeof(u64) * (i+1), alloc.allocated);
     }
@@ -100,15 +119,3 @@ u8 linear_allocator_multi_allocation_all_space_and_free() {
     return true;
 }
 
-void linear_allocator_register_tests() {
-    test_manager_register_test(linear_allocator_should_create_and_destroy,
-        "Linear allocator should create and destroy");
-    test_manager_register_test(linear_allocator_single_allocation_all_space,
-        "Linear allocator single alloc for all space");
-    test_manager_register_test(linear_allocator_multi_allocation_all_space,
-        "Linear allocator multi alloc for all space");
-    test_manager_register_test(linear_allocator_multi_allocation_over_allocate,
-        "Linear allocator try over-allocate");
-    test_manager_register_test(linear_allocator_multi_allocation_all_space_and_free,
-        "Linear allocator allocated space should be 0 after free");
-}

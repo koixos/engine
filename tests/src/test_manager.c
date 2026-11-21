@@ -17,16 +17,15 @@ void test_manager_init() {
     tests = darray_create(test_entry);
 }
 
-void test_manager_register_test(u8(*PFN_test)(), char *desc) {
+void test_manager_register_test(PFN_test test, char *desc) {
     test_entry e;
-    e.func = PFN_test;
+    e.func = test;
     e.desc = desc;
     darray_push(tests, e);
 }
 
 void test_manager_run_tests() {
     u32 passed = 0, failed = 0, skipped = 0;
-    
     u32 count = darray_length(tests);
 
     clock total_time;
