@@ -21,22 +21,22 @@
 #define K_SEC2MS_MULTIPLIER     1000.0f
 #define K_MS2SEC_MULTIPLIER     0.001f
 #define K_INF                   1e30f
-#define K_FLOAT_EPS             1.192092896e-07f    #smallest pos num where 1.0 + FLOAT_EPSILON != 0
+#define K_FLOAT_EPS             1.192092896e-07f    //smallest pos num where 1.0 + FLOAT_EPSILON != 0
 
-/* GENERAL MATH FUNCS */
+/* GENERAL MATH FUNCS (priv) */
+f32 ksin(f32 x);
+f32 kcos(f32 x);
+f32 ktan(f32 x);
+f32 kacos(f32 x);
+f32 ksqrt(f32 x);
+f32 kabs(f32 x);
 
-KAPI f32 ksin(f32 x);
-KAPI f32 kcos(f32 x);
-KAPI f32 ktan(f32 x);
-KAPI f32 kacos(f32 x);
-KAPI f32 ksqrt(f32 x);
-KAPI f32 kabs(f32 x);
+i32 krand();
+i32 krand_in_range(i32 min, i32 max);
 
-KAPI i32 krand();
-KAPI i32 krand_in_range(i32 min, i32 max);
-
-KAPI f32 fkrand();
-KAPI f32 fkrand_in_range(f32 min, f32 max);
+f32 fkrand();
+f32 fkrand_in_range(f32 min, f32 max);
+/* ------------------------- */
 
 /**
  * Indicates if val is a power of 2 - 0 is considered _not_ a power of 2.
@@ -47,7 +47,7 @@ KINLINE b8 is_power_of_2(u64 val) {
     return (val != 0) && ((val & (val - 1)) == 0);
 }
 
-/* VECTOR 2 */
+/* funcs for VECTOR 2 ops */
 
 /**
  * @brief Creates and returns a new 2-element vec using the supplied vals
@@ -136,7 +136,7 @@ KINLINE vec2 vec2_mul(vec2 vec_1, vec2 vec_2) {
  */
 KINLINE vec2 vec2_div(vec2 vec_1, vec2 vec_2) {
     if (vec_2.x == 0 || vec_2.y == 0) {
-        KERROR("Vector division failed - division by zero!");
+        KERROR("Vector division failed: division by zero");
         return (vec2){};
     }
     
@@ -185,9 +185,8 @@ KINLINE vec2 vec2_normalized(vec2 vec) {
  * @return true if all differences within tolerance; otherwise false
  */
 KINLINE b8 vec2_compare(vec2 vec_1, vec2 vec_2, f32 tolerance) {
-    if (kabs(vec_1.x - vec_2.x) > tolerance ||
-        kabs(vec_1.y - vec_2.y) > tolerance)
-            return false;
+    if (kabs(vec_1.x - vec_2.x) > tolerance || kabs(vec_1.y - vec_2.y) > tolerance)
+        return false;
     return true;
 }
 
@@ -201,8 +200,8 @@ KINLINE f32 vec2_distance(vec2 vec_1, vec2 vec_2) {
     };
     return vec2_len(d);
 }
-
-/* VECTOR 3 */
+/* ---------------------- */
+/* funcs for VECTOR 3 ops */
 
 /**
  * @brief Creates and returns a new 3-element vec using the supplied vals
@@ -336,7 +335,7 @@ KINLINE vec3 vec3_mul_scalar(vec3 vec, f32 scalar) {
  */
 KINLINE vec3 vec3_div(vec3 vec_1, vec3 vec_2) {
     if (vec_2.x == 0 || vec_2.y == 0 || vec_2.z == 0) {
-        KERROR("Vector division failed - division by zero!");
+        KERROR("Vector division failed: division by zero");
         return (vec3){};
     }
     
@@ -407,10 +406,8 @@ KINLINE vec3 vec3_cross(vec3 vec_1, vec3 vec_2) {
  * @return true if all differences within tolerance; otherwise false
  */
 KINLINE b8 vec3_compare(vec3 vec_1, vec3 vec_2, f32 tolerance) {
-    if (kabs(vec_1.x - vec_2.x) > tolerance ||
-        kabs(vec_1.y - vec_2.y) > tolerance ||
-        kabs(vec_1.z - vec_2.z) > tolerance)
-            return false;
+    if (kabs(vec_1.x - vec_2.x) > tolerance || kabs(vec_1.y - vec_2.y) > tolerance || kabs(vec_1.z - vec_2.z) > tolerance)
+        return false;
     return true;
 }
 
@@ -425,8 +422,8 @@ KINLINE f32 vec3_distance(vec3 vec_1, vec3 vec_2) {
     };
     return vec3_len(d);
 }
-
-/* VECTOR 4 */
+/* ---------------------- */
+/* fucns for VECTOR 4 ops */
 
 /**
  * @brief Creates and returns a new 4-element vec using the supplied vals
@@ -438,6 +435,7 @@ KINLINE f32 vec3_distance(vec3 vec_1, vec3 vec_2) {
  */
 KINLINE vec4 vec4_create(f32 x, f32 y, f32 z, f32 w) {
     vec4 out_vec;
+
 #if defined(KUSE_SIMD)
     out_vec.data = _mm_setr_ps(x, y, z, w);
 #else
@@ -446,6 +444,7 @@ KINLINE vec4 vec4_create(f32 x, f32 y, f32 z, f32 w) {
     out_vec.z = z;
     out_vec.w = w;
 #endif
+
     return out_vec;
 }
 
@@ -526,7 +525,7 @@ KINLINE vec4 vec4_mul(vec4 vec_1, vec4 vec_2) {
  */
 KINLINE vec4 vec4_div(vec4 vec_1, vec4 vec_2) {
     if (vec_2.x == 0 || vec_2.y == 0 || vec_2.z == 0 || vec_2.w == 0) {
-        KERROR("Vector division failed - division by zero!");
+        KERROR("Vector division failed: division by zero!");
         return (vec4){};
     }
     
@@ -571,10 +570,7 @@ KINLINE vec4 vec4_normalized(vec4 vec) {
     return vec;
 }
 
-KINLINE f32 vec4_dot_f32(
-    f32 a0, f32 a1, f32 a2, f32 a3,
-    f32 b0, f32 b1, f32 b2, f32 b3
-) {
+KINLINE f32 vec4_dot_f32(f32 a0, f32 a1, f32 a2, f32 a3, f32 b0, f32 b1, f32 b2, f32 b3) {
     return a0 * b0 + a1 * b1 + a2 * b2 + a3 * b3;
 }
 
@@ -662,7 +658,6 @@ KINLINE mat4 mat4_perspective(f32 fov_radians, f32 aspect_ratio, f32 near_clip, 
     kzero_mem(out_mat.data, sizeof(f32) * 16);
 
     f32 half_tan_fov = ktan(fov_radians * 0.5f);
-
     out_mat.data[0] = 1.0f / (aspect_ratio * half_tan_fov);
     out_mat.data[5] = 1.0f / half_tan_fov;
     out_mat.data[10] = -((far_clip + near_clip) / (far_clip - near_clip));
@@ -690,6 +685,7 @@ KINLINE mat4 mat4_look_at(vec3 pos, vec3 target, vec3 up) {
     z_axis = vec3_normalized(z_axis);
 
     vec3 x_axis = vec3_normalized(vec3_cross(z_axis, up));
+
     vec3 y_axis = vec3_cross(x_axis, z_axis);
 
     out_mat.data[0] = x_axis.x;
@@ -770,15 +766,14 @@ KINLINE mat4 mat4_inverse(mat4 mat) {
         t23 = m[4] * m[1];
 
     mat4 out_mat;
-    f32 *o = out_mat.data;
 
+    f32 *o = out_mat.data;
     o[0] = (t0 * m[5] + t3 * m[9] + t4 * m[13]) - (t1 * m[5] + t2 * m[9] + t5 * m[13]);
     o[1] = (t1 * m[1] + t6 * m[9] + t9 * m[13]) - (t0 * m[1] + t7 * m[9] + t8 * m[13]);
     o[2] = (t2 * m[1] + t7 * m[5] + t10 * m[13]) - (t3 * m[1] + t6 * m[5] + t11 * m[13]);
     o[3] = (t5 * m[1] + t8 * m[5] + t11 * m[9]) - (t4 * m[1] + t9 * m[5] + t10 * m[9]);
 
     f32 d = 1.0f / (m[0] * o[0] + m[4] * o[1] + m[8] * o[2] + m[12] * o[3]);
-
     o[0] = d * o[0];
     o[1] = d * o[1];
     o[2] = d * o[2];
@@ -824,44 +819,38 @@ KINLINE mat4 mat4_scale(vec3 scale) {
 /* Funcs to create matrices from Euler angles */
 
 KINLINE mat4 mat4_euler_x(f32 angle_radians) {
-    mat4 out_mat = mat4_identity();
-
     f32 c = kcos(angle_radians);
     f32 s = ksin(angle_radians);
-
+    
+    mat4 out_mat = mat4_identity();
     out_mat.data[5] = c;
     out_mat.data[6] = s;
     out_mat.data[9] = -s;
     out_mat.data[10] = c;
-
     return out_mat;
 }
 
 KINLINE mat4 mat4_euler_y(f32 angle_radians) {
-    mat4 out_mat = mat4_identity();
-
     f32 c = kcos(angle_radians);
     f32 s = ksin(angle_radians);
-
+    
+    mat4 out_mat = mat4_identity();
     out_mat.data[0] = c;
     out_mat.data[2] = -s;
     out_mat.data[8] = s;
-    out_mat.data[10] = c;
-    
+    out_mat.data[10] = c;    
     return out_mat;
 }
 
 KINLINE mat4 mat4_euler_z(f32 angle_radians) {
-    mat4 out_mat = mat4_identity();
-
     f32 c = kcos(angle_radians);
     f32 s = ksin(angle_radians);
-
+    
+    mat4 out_mat = mat4_identity();
     out_mat.data[0] = c;
     out_mat.data[1] = s;
     out_mat.data[4] = -s;
-    out_mat.data[5] = c;
-    
+    out_mat.data[5] = c;    
     return out_mat;
 }
 
@@ -869,10 +858,8 @@ KINLINE mat4 mat4_euler_xyz(f32 x_radians, f32 y_radians, f32 z_radians) {
     mat4 rx = mat4_euler_x(x_radians);
     mat4 ry = mat4_euler_y(y_radians);
     mat4 rz = mat4_euler_z(z_radians);
-    
     mat4 out_mat = mat4_mul(rx, ry);    
     out_mat = mat4_mul(out_mat, rz);   
-
     return out_mat;
 }
 
@@ -1053,8 +1040,8 @@ KINLINE mat4 quat_to_mat4(quat q) {
  */
 KINLINE mat4 quat_to_rotation_matrix(quat q, vec3 center) {
     mat4 out_mat;
-
     f32 *o = out_mat.data;
+
     o[0] = (q.x * q.x) - (q.y * q.y) - (q.z * q.z) + (q.w * q.w);
     o[1] = 2.0f * ((q.x * q.y) + (q.z * q.w));
     o[2] = 2.0f * ((q.x * q.z) - (q.y * q.w));
@@ -1080,29 +1067,25 @@ KINLINE mat4 quat_to_rotation_matrix(quat q, vec3 center) {
 
 KINLINE quat quat_from_axis_angle(vec3 axis, f32 angle, b8 normalize) {
     const f32 half_angle = 0.5f * angle;
-    
+
     f32 c = kcos(half_angle);
     f32 s = ksin(half_angle);
-
     quat q = (quat){s * axis.x, s * axis.y, s * axis.z, c};
 
     if (normalize)
         return quat_normalize(q);
-    
     return q;
 }
 
 KINLINE quat quat_slerp(quat q_0, quat q_1, f32 percentage) {
-    quat out_quat;
-
     //src: https://en.wikipedia.org/wiki/Slerp
     //only unit quaternions are valid rotations, normalize to avoid undef behav
     quat v0 = quat_normalize(q_0);
     quat v1 = quat_normalize(q_1);
-
+    
     //compute the cos of the angle between the two vecs
     f32 dot = quat_dot(v0, v1);
-
+    
     //if the dot product is negative, slerp won't take the shorter path
     // note that v1 and -v1 are equivalent when the negation is applied to all four components,
     // fix by reversing one quaternion
@@ -1113,8 +1096,9 @@ KINLINE quat quat_slerp(quat q_0, quat q_1, f32 percentage) {
         v1.w = -v1.w;
         dot = -dot;
     }
-
+    
     const f32 DOT_THRESHOLD = 0.9995f;
+    quat out_quat;
 
     if (dot > DOT_THRESHOLD) {
         //if inps are too close for comfort, linearly interpolate and normalize the result
@@ -1124,7 +1108,6 @@ KINLINE quat quat_slerp(quat q_0, quat q_1, f32 percentage) {
             v0.z + ((v1.z - v0.z) * percentage),
             v0.w + ((v1.w - v0.w) * percentage)
         };
-
         return quat_normalize(out_quat);
     }
 

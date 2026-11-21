@@ -3,7 +3,8 @@
 #include "defines.h"
 
 typedef union vector2_u {
-    f32 elems[2];   //arr of x and y
+    f32 elems[2];   //arr of x, y
+
     struct {
         union {
             //the first elem
@@ -18,6 +19,7 @@ typedef union vector2_u {
 
 typedef union vector3_u {
     f32 elems[3];   //arr of x, y, z
+
     struct {
         union {
             //the first elem
@@ -40,6 +42,7 @@ typedef union vector4_u {
     alignas(16) __m128 data;
 #endif
     alignas(16)*/ f32 elems[4];   //arr of x, y, z, w
+    
     struct {
         union {
             //the first elem

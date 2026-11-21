@@ -7,29 +7,17 @@
 
 static b8 is_seeded = false;
 
-f32 ksin(f32 x) {
-    return sinf(x);
-}
+f32 ksin(f32 x) { return sinf(x); }
 
-f32 kcos(f32 x) {
-    return cosf(x);
-}
+f32 kcos(f32 x) { return cosf(x); }
 
-f32 ktan(f32 x) {
-    return tanf(x);
-}
+f32 ktan(f32 x) { return tanf(x); }
 
-f32 kacos(f32 x) {
-    return acosf(x);
-}
+f32 kacos(f32 x) { return acosf(x); }
 
-f32 ksqrt(f32 x) {
-    return sqrtf(x);
-}
+f32 ksqrt(f32 x) { return sqrtf(x); }
 
-f32 kabs(f32 x) {
-    return fabsf(x);
-}
+f32 kabs(f32 x) { return fabsf(x); }
 
 i32 krand() {
     if (!is_seeded) {
