@@ -40,3 +40,4 @@
 **TODOs**
 
 - should test the code on windows machine 
+- should check funcs for unused params

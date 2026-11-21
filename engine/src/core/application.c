@@ -14,16 +14,19 @@
 
 typedef struct app_state {
     game *game_inst;
+
     b8 is_running;
     b8 is_suspended;
+
     i16 width;
     i16 height;
+
     clock clock;
     f64 last_time;
+
     linear_allocator systems_allocator;
 
-    //subsystems
-    
+    /* subsystems */
     u64 event_sys_mem_requirement;
     void *event_sys_st;
     
@@ -41,15 +44,17 @@ typedef struct app_state {
 
     u64 renderer_sys_mem_requirement;
     void *renderer_sys_st;
+    /* ---------- */
 } app_state;
 
 static app_state *app_st;
 
-//event handlers
+/* event handlers (priv) */
 b8 app_on_event(u16 code, void *sender, void *listener_inst, event_context context);
 b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context);
 b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context context);
- 
+/* --------------------- */
+
 b8 app_create(game *game_inst) {
     if (game_inst->app_state) {
         KERROR("app_create called more than once.");
@@ -69,39 +74,26 @@ b8 app_create(game *game_inst) {
 
     //event subsystem
     init_event_sys(&app_st->event_sys_mem_requirement, 0);
-    app_st->event_sys_st = 
-        linear_allocator_allocate(&app_st->systems_allocator, app_st->event_sys_mem_requirement);
-    if (!init_event_sys(&app_st->event_sys_mem_requirement, app_st->event_sys_st)) {
-        KERROR("Failed to init event system; shutting down.");
-        return false;
-    }
+    app_st->event_sys_st = linear_allocator_allocate(&app_st->systems_allocator, app_st->event_sys_mem_requirement);
+    init_event_sys(&app_st->event_sys_mem_requirement, app_st->event_sys_st);
 
     //memory subsystem
     init_mem_sys(&app_st->memory_sys_mem_requirement, 0);
-    app_st->memory_sys_st = 
-        linear_allocator_allocate(&app_st->systems_allocator, app_st->memory_sys_mem_requirement);
-    if (!init_mem_sys(&app_st->memory_sys_mem_requirement, app_st->memory_sys_st)) {
-        KERROR("Failed to init memory system; shutting down.");
-        return false;
-    }
+    app_st->memory_sys_st = linear_allocator_allocate(&app_st->systems_allocator, app_st->memory_sys_mem_requirement);
+    init_mem_sys(&app_st->memory_sys_mem_requirement, app_st->memory_sys_st);
 
     //logging subsystem
     init_logging_sys(&app_st->logging_sys_mem_requirement, 0);
-    app_st->logging_sys_st = 
-        linear_allocator_allocate(&app_st->systems_allocator, app_st->logging_sys_mem_requirement);
+    app_st->logging_sys_st = linear_allocator_allocate(&app_st->systems_allocator, app_st->logging_sys_mem_requirement);
     if (!init_logging_sys(&app_st->logging_sys_mem_requirement, app_st->logging_sys_st)) {
-        KERROR("Failed to init logging system; shutting down.");
+        KERROR("Failed to init logging system, shutting down.");
         return false;
     }
 
     //input subsystem
     init_input_sys(&app_st->input_sys_mem_requirement, 0);
-    app_st->input_sys_st = 
-        linear_allocator_allocate(&app_st->systems_allocator, app_st->input_sys_mem_requirement);
-    if (!init_input_sys(&app_st->input_sys_mem_requirement, app_st->input_sys_st)) {
-        KERROR("Failed to init input system; shutting down.");
-        return false;
-    }
+    app_st->input_sys_st = linear_allocator_allocate(&app_st->systems_allocator, app_st->input_sys_mem_requirement);
+    init_input_sys(&app_st->input_sys_mem_requirement, app_st->input_sys_st);
 
     event_register(EVENT_CODE_APPLICATION_QUIT, 0, app_on_event);
     event_register(EVENT_CODE_KEY_PRESSED, 0, app_on_key);
@@ -110,8 +102,7 @@ b8 app_create(game *game_inst) {
 
     //platform subsystem
     platform_sys_startup(&app_st->platform_sys_mem_requirement, 0, 0, 0, 0, 0, 0);
-    app_st->platform_sys_st = 
-        linear_allocator_allocate(&app_st->systems_allocator, app_st->platform_sys_mem_requirement);
+    app_st->platform_sys_st = linear_allocator_allocate(&app_st->systems_allocator, app_st->platform_sys_mem_requirement);
     if (!platform_sys_startup(
             &app_st->platform_sys_mem_requirement,
             app_st->platform_sys_st,
@@ -120,17 +111,16 @@ b8 app_create(game *game_inst) {
             game_inst->app_config.start_pos_y,
             game_inst->app_config.start_width,
             game_inst->app_config.start_height
-        )) {
-        KERROR("Failed to startup platform system; shutting down.");
+    )) {
+        KERROR("Failed to startup platform system, shutting down.");
         return false;
     }
 
     //renderer subsystem
     renderer_sys_init(&app_st->renderer_sys_mem_requirement, 0, 0);
-    app_st->renderer_sys_st = 
-        linear_allocator_allocate(&app_st->systems_allocator, app_st->renderer_sys_mem_requirement);
+    app_st->renderer_sys_st = linear_allocator_allocate(&app_st->systems_allocator, app_st->renderer_sys_mem_requirement);
     if (!renderer_sys_init(&app_st->renderer_sys_mem_requirement, app_st->renderer_sys_st, game_inst->app_config.name)) {
-        KERROR("Failed to init renderer system; shutting down.");
+        KERROR("Failed to init renderer system, shutting down.");
         return false;
     }
 
@@ -148,6 +138,7 @@ b8 app_create(game *game_inst) {
 
 b8 app_run() {
     app_st->is_running = true;
+
     clock_start(&app_st->clock);
     clock_update(&app_st->clock);
     app_st->last_time = app_st->clock.elapsed;
@@ -187,17 +178,16 @@ b8 app_run() {
             pkt.delta_time = delta;
             renderer_draw_frame(&pkt);
 
-            //figure out how long the frame took
+            //figuring out how long the frame took
             f64 frame_end_time = platform_get_absolute_time();
             f64 frame_elapsed_time = frame_end_time - frame_start_time;
             running_time += frame_elapsed_time;
-            f64 remaining_secs = target_frame_secs - frame_elapsed_time;
 
-            //if there is time left, give it back to the os
+            //if there is time left, give it back to the OS
+            f64 remaining_secs = target_frame_secs - frame_elapsed_time;
             if (remaining_secs > 0) {
                 u64 remaining_ms = remaining_secs * 1000;
-                //TODO: this may be necessary for release builds, thus turned off
-                b8 limit_frames = false;
+                b8 limit_frames = false;    //TODO: this may be necessary for release builds, thus turned off
                 if (remaining_ms > 0 && limit_frames)
                     platform_sleep(remaining_ms - 1);
                 frame_count++;
@@ -236,7 +226,6 @@ b8 app_on_event(u16 code, void *sender, void *listener_inst, event_context conte
         app_st->is_running = false;
         return true;
     }
-
     return false;
 }
 
@@ -266,8 +255,7 @@ b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context con
         if (width != app_st->width || height != app_st->height) {
             app_st->width = width;
             app_st->height = height;
-            
-            KDEBUG("Window resized: %i, %i", width, height);
+            //KDEBUG("Window resized: %i, %i", width, height);
 
             //handle minimization
             if (width == 0 || height == 0) {

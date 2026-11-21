@@ -22,18 +22,12 @@ typedef struct event_sys_state {
 
 static event_sys_state *state_ptr;
 
-b8 init_event_sys(u64 *mem_requirement, void *st) {
-    //TODO: alw returns true
+void init_event_sys(u64 *mem_requirement, void *st) {
     *mem_requirement = sizeof(event_sys_state);
-
-    if (st == 0)
-        return false;
-    
+    if (!st) return;
     kzero_mem(st, sizeof(st));
     state_ptr = st;
-
-    KINFO("Event subsystem initialized.");
-    return true;
+    KDEBUG("Event subsystem initialized.");
 }
 
 void event_sys_shutdown(void *st) {
@@ -47,7 +41,6 @@ void event_sys_shutdown(void *st) {
             state_ptr->registered[i].events = 0;
         }
     }
-
     state_ptr = 0;
 }
 
@@ -69,7 +62,6 @@ b8 event_register(u16 code, void *listener, PFN_on_event on_event) {
     registered_event event;
     event.listener = listener;
     event.callback = on_event;
-
     darray_push(state_ptr->registered[code].events, event);
 
     return true;
@@ -99,16 +91,15 @@ b8 event_unregister(u16 code, void *listener, PFN_on_event on_event) {
 }
 
 b8 event_fire(u16 code, void *sender, event_context data) {
-    if (!state_ptr || state_ptr->registered[code].events == 0)
+    if (!state_ptr || !state_ptr->registered[code].events)
         return false;
     
     u64 registered_count = darray_length(state_ptr->registered[code].events);
     for (u64 i = 0; i < registered_count; i++) {
         registered_event e = state_ptr->registered[code].events[i];
-        if (e.callback(code, sender, e.listener, data)) {
+        if (e.callback(code, sender, e.listener, data))
             //msg handled, dont sent to other listeners
             return true;
-        }
     }
 
     //not found

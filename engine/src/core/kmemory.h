@@ -3,7 +3,7 @@
 #include "defines.h"
 
 typedef enum mem_tag {
-    //for temporary use, should be assigned one of the below or have a new tag created
+    //tagging for temp use: should be assigned one of the below or have a new tag created
     MEM_TAG_UNKNOWN,
     MEM_TAG_ARRAY,
     MEM_TAG_LINEAR_ALLOCATOR,
@@ -26,20 +26,14 @@ typedef enum mem_tag {
     MEM_TAG_MAX_TAGS,
 } mem_tag;
 
-b8 init_mem_sys(u64 *mem_requirement, void *st);
-
+void init_mem_sys(u64 *mem_requirement, void *st);
 void mem_sys_shutdown(void *st);
 
-KAPI void* kallocate(u64 size, mem_tag tag);
+void* kallocate(u64 size, mem_tag tag);
+void kfree(void *block, u64 size, mem_tag tag);
+void* kzero_mem(void *block, u64 size);
+void* kcopy_mem(void *dest, const void *src, u64 size);
+void* kset_mem(void *dest, i32 val, u64 size);
 
-KAPI void kfree(void *block, u64 size, mem_tag tag);
-
-KAPI void* kzero_mem(void *block, u64 size);
-
-KAPI void* kcopy_mem(void *dest, const void *src, u64 size);
-
-KAPI void* kset_mem(void *dest, i32 val, u64 size);
-
-KAPI char* get_mem_usage_str();
-
-KAPI u64 get_mem_alloc_count();
+char* get_mem_usage_str();
+u64 get_mem_alloc_count();

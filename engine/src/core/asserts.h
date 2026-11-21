@@ -13,11 +13,13 @@
 #define debugBreak() __builtin_trap()
 #endif
 
-KAPI void report_assertion_failure(const char *expr, const char *msg, const char *file, i32 line);
+void report_assertion_failure(const char *expr, const char *msg, const char *file, i32 line);
 
-//writing assertions wrapped in do-whiles ensures that the code
-// obeys C stds by putting a ; at the end of assertion lines,
-// also avoids extra semicolon problems (in if-else's, for instance)
+/**
+ * Writing assertions wrapped in do-whiles ensures that the code
+ *  obeys C stds by putting a ; at the end of assertion lines,
+ *  also avoids extra semicolon problems (in if-else's, for instance)
+ */
 
 #define KASSERT(expr)                                                   \
     do {                                                                \

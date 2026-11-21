@@ -7,13 +7,18 @@ typedef struct clock {
     f64 elapsed;
 } clock;
 
-//starts the provided clk - resets elapsed time
-KAPI void clock_start(clock *clk);
+/**
+ * Starts the provided clk - resets elapsed time
+ */
+void clock_start(clock *clk);
 
-//updates the provided clk - should be called just before checking elapsed time
-//has no effect on non-started clks
-KAPI void clock_update(clock *clk);
+/**
+ * Updates the provided clk - should be called just before checking elapsed time,
+ *  and has no effect on non-started clks
+ */
+void clock_update(clock *clk);
 
-//stops the provided clk - does not reset elapsed time
-KAPI void clock_stop(clock *clk);
-
+/**
+ * Stops the provided clk - does not reset elapsed time
+ */
+void clock_stop(clock *clk);

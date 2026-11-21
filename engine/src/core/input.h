@@ -2,14 +2,14 @@
 
 #include "defines.h"
 
+#define DEFINE_KEY(name, code) KEY_##name = code
+
 typedef enum buttons {
     BUTTON_LEFT,
     BUTTON_RIGHT,
     BUTTON_MIDDLE,
     BUTTON_MAX_BTNS,
 } buttons;
-
-#define DEFINE_KEY(name, code) KEY_##name = code
 
 typedef enum keys {
     DEFINE_KEY(BACKSPACE, 0x08),
@@ -142,40 +142,17 @@ typedef enum keys {
     KEYS_MAX_KEYS
 } keys;
 
-b8 init_input_sys(u64 *mem_requirement, void *st);
-
+void init_input_sys(u64 *mem_requirement, void *st);
 void input_sys_shutdown(void *st);
-
 void input_update(f64 delta_time);
-
-//keyboard inp
-
-KAPI b8 input_is_key_down(keys key);
-
-KAPI b8 input_is_key_up(keys key);
-
-KAPI b8 input_was_key_down(keys key);
-
-KAPI b8 input_was_key_up(keys key);
 
 void input_process_key(keys key, b8 pressed);
 
-//mouse inp
-
-KAPI b8 input_is_btn_down(buttons btn);
-
-KAPI b8 input_is_btn_up(buttons btn);
-
-KAPI b8 input_was_btn_down(buttons btn);
-
-KAPI b8 input_was_btn_up(buttons btn);
-
 void input_process_btn(buttons btn, b8 pressed);
-
-KAPI void input_get_mouse_pos(i32 *x, i32 *y);
-
-KAPI void input_get_prev_mouse_pos(i32 *x, i32 *y);
-
 void input_process_mouse_move(i16 x, i16 y);
-
 void input_process_mouse_wheel(i8 z_delta);
+
+/* keyboard inp */
+b8 input_is_key_up(keys key);
+b8 input_was_key_down(keys key);
+/* ------------ */

@@ -2,12 +2,12 @@
 
 #include "defines.h"
 
-//controllable log levels
-
+/* controllable log levels */
 #define LOG_WARN_ENABLED 1
 #define LOG_INFO_ENABLED 1
 #define LOG_DEBUG_ENABLED 1
 #define LOG_TRACE_ENABLED 1
+/* ----------------------- */
 
 //disable debug and trace logging for release builds
 #if KRELEASE == 1
@@ -31,10 +31,9 @@ typedef enum log_level {
  * @param st 0 if just requesting mem requirement, otherwise allocated block of memory
  */
 b8 init_logging_sys(u64 *mem_requirement, void *st);
-
 void shutdown_logging(void *st);
 
-KAPI void log_output(log_level lev, const char *msg, ...);
+void log_output(log_level lev, const char *msg, ...);
 
 #define KFATAL(msg, ...) log_output(LOG_LEVEL_FATAL, msg, ##__VA_ARGS__);
 

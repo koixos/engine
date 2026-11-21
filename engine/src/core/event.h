@@ -26,8 +26,7 @@ typedef struct event_context {
 //should return true if handles
 typedef b8 (*PFN_on_event)(u16 code, void *sender, void *listener_inst, event_context data);
 
-b8 init_event_sys(u64 *mem_requirement, void *st);
-
+void init_event_sys(u64 *mem_requirement, void *st);
 void event_sys_shutdown(void *st);
 
 /**
@@ -39,7 +38,7 @@ void event_sys_shutdown(void *st);
  * @param on_event The callback fucntion ptr to be invoked when the event code is fired.
  * @returns true if the event is successfully registered; otherwise false.
  */
-KAPI b8 event_register(u16 code, void *listener, PFN_on_event on_event);
+b8 event_register(u16 code, void *listener, PFN_on_event on_event);
 
 /**
  * Unregister from listening for when events are sent with the provided code.
@@ -49,7 +48,7 @@ KAPI b8 event_register(u16 code, void *listener, PFN_on_event on_event);
  * @param on_event The callback fucntion ptr to be unregistered.
  * @returns true if the event is successfully unregistered; otherwise false.
  */
-KAPI b8 event_unregister(u16 code, void *listener, PFN_on_event on_event);
+b8 event_unregister(u16 code, void *listener, PFN_on_event on_event);
 
 /**
  * Fires an event to listeners of the provided code.
@@ -60,9 +59,9 @@ KAPI b8 event_unregister(u16 code, void *listener, PFN_on_event on_event);
  * @param data The event data.
  * @returns true if handled, otherwise false.
  */
-KAPI b8 event_fire(u16 code, void *sender, event_context data);
+b8 event_fire(u16 code, void *sender, event_context data);
 
-//sys-internal event codes, app should use codes beyond 255
+//sys-internal event codes - app should use codes beyond 255
 typedef enum sys_event_code {
     //shuts the app down on the next frame
     EVENT_CODE_APPLICATION_QUIT = 0x01,

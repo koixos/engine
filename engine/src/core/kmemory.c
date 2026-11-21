@@ -39,20 +39,13 @@ typedef struct mem_sys_state {
 
 static mem_sys_state *state_ptr;
 
-b8 init_mem_sys(u64 *mem_requirement, void *st) {
-    //TODO: alw returns true
+void init_mem_sys(u64 *mem_requirement, void *st) {
     *mem_requirement = sizeof(mem_sys_state);
-
-    if (st == 0)
-        return true;
-    
+    if (!st) return;
     state_ptr = st;
     state_ptr->alloc_count = 0;
-
     platform_zero_mem(&state_ptr->stats, sizeof(state_ptr->stats));
-
-    KINFO("Memory subsystem initialized.");
-    return true;
+    KDEBUG("Memory subsystem initialized.");
 }
 
 void mem_sys_shutdown(void *st) {
@@ -130,8 +123,7 @@ char* get_mem_usage_str() {
         offset += written;
     }
 
-    char *out_str = str_dup(buf);
-    return out_str;
+    return str_dup(buf);
 }
 
 u64 get_mem_alloc_count() {

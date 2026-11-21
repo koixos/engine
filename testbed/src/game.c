@@ -4,8 +4,6 @@
 #include <core/input.h>
 #include <core/kmemory.h>
 
-//TODO: unused params in below funcs
-
 b8 game_init(game *game_inst) {
     KDEBUG("game init() called!");
     return true;
