@@ -4,13 +4,15 @@
 #include <core/input.h>
 #include <core/kmemory.h>
 
+//TODO: unused params in below funcs
+
 b8 game_init(game *game_inst) {
     KDEBUG("game init() called!");
     return true;
 }
 
 b8 game_update(game *game_inst, f32 delta_time) {
-    //TODO: if more than one game inst below static will be a problem
+    //TODO: if more than one game inst, below static will be a problem
     static u64 alloc_count = 0;
     u64 prev_alloc_count = alloc_count;
     alloc_count = get_mem_alloc_count();
@@ -23,5 +25,4 @@ b8 game_render(game *game_inst, f32 delta_time) {
     return true;
 }
 
-void game_on_resize(game *game_inst, u32 width, u32 height) {
-}
+void game_on_resize(game *game_inst, u32 width, u32 height) { }
