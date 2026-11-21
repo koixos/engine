@@ -59,17 +59,15 @@ b8 platform_sys_startup(
     i32 height
 ) {
     *mem_requirement = sizeof(platform_state);
-
-    if (st == 0)
+    if (!st)
         return true;
-
     state_ptr = st;
 
     //connect to X
     state_ptr->disp = XOpenDisplay(NULL);
 
-    //TODO: this action is global along whole OS, find a better way to avoid key repeats
     //turn off key repeats
+    //TODO: this action is global along whole OS, try finding a better way to avoid key repeats
     XAutoRepeatOff(state_ptr->disp);
 
     //retrieve the conn from disp
@@ -112,7 +110,7 @@ b8 platform_sys_startup(
         state_ptr->conn,
         XCB_COPY_FROM_PARENT,           //depth
         state_ptr->window,
-        state_ptr->screen->root,            //parent
+        state_ptr->screen->root,        //parent
         x,
         y,
         width,
@@ -131,13 +129,13 @@ b8 platform_sys_startup(
         state_ptr->window,
         XCB_ATOM_WM_NAME,
         XCB_ATOM_STRING,
-        8,  //data shoukd be viewed 8 bits at a time
+        8,  //data should be viewed 8 bits at a time
         strlen(app_name),
         app_name
     );
 
     //tell server to notify when window manager
-    //attempts to kill the window
+    // attempts to kill the window
     xcb_intern_atom_cookie_t wm_del_cookie = xcb_intern_atom(
         state_ptr->conn,
         0,
@@ -212,11 +210,10 @@ b8 platform_sys_startup(
     //map window to screen
     xcb_map_window(state_ptr->conn, state_ptr->window);
 
-    //TODO: is needed?
-    /*free(wm_del_reply);
+    free(wm_del_reply);
     free(wm_protocols_reply);
     free(wm_state_hidden_reply);
-    free(wm_state_reply);*/
+    free(wm_state_reply);
 
     //flush the stream
     i32 stream_res = xcb_flush(state_ptr->conn);
@@ -225,7 +222,7 @@ b8 platform_sys_startup(
         return false;
     }
 
-    KINFO("Platform subsystem for Linux initialized.");
+    KDEBUG("Platform subsystem for Linux initialized.");
     return true;
 }
 
@@ -295,7 +292,6 @@ b8 platform_pump_msgs() {
             case XCB_CONFIGURE_NOTIFY: {
                 //resizing
                 xcb_configure_notify_event_t *config_event = (xcb_configure_notify_event_t *)event;
-
                 //fire the event, the app layer should pick this up but not handle it
                 // as it should be visible to other parts of the app
                 event_context context;
@@ -369,25 +365,12 @@ b8 platform_pump_msgs() {
     return !quit_flagged;
 }
 
-void* platform_allocate(u64 size, b8 aligned) {
-    return malloc(size);
-}
+void* platform_allocate(u64 size, b8 aligned) { return malloc(size); }
+void platform_free(void *block, b8 aligned) { free(block); } 
 
-void platform_free(void *block, b8 aligned) {
-    free(block);
-} 
-
-void* platform_zero_mem(void *block, u64 size) {
-    return memset(block, 0, size);
-}
-
-void* platform_copy_mem(void *dest, const void *src, u64 size) {
-    return memcpy(dest, src, size);
-}
-
-void* platform_set_mem(void *dest, i32 val, u64 size) {
-    return memset(dest, val, size);
-}
+void* platform_zero_mem(void *block, u64 size) { return memset(block, 0, size); }
+void* platform_copy_mem(void *dest, const void *src, u64 size) { return memcpy(dest, src, size); }
+void* platform_set_mem(void *dest, i32 val, u64 size) { return memset(dest, val, size); }
 
 void platform_console_write(const char *msg, u8 clr) {
     //FATAL, ERROR, WARN, INFO, DEBUG, TRACE
@@ -407,9 +390,6 @@ f64 platform_get_absolute_time() {
     return now.tv_sec + now.tv_nsec * 0.000000001;
 }
 
-//sleep on the thread for provided ms - this blocks main thread
-// should only be used to give time back to OS for unused update power
-// thus it is not exported
 void platform_sleep(u64 ms) {
 #if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;

@@ -1,6 +1,5 @@
 #include "platform.h"
 
-//TODO: test this code
 //Windows platform layer
 #if KPLATFORM_WINDOWS
 
@@ -15,6 +14,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <stdlib.h>
+
 //for surface creation
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_win32.h>
@@ -50,10 +50,7 @@ b8 platform_sys_startup(
     i32 height
 ) {
     *mem_requirement = sizeof(platform_state);
-
-    if (st == 0)
-        return true;
-
+    if (!st) return true;
     state_ptr = st;
     state_ptr->h_inst = GetModuleHandleA(0);
 
@@ -112,12 +109,11 @@ b8 platform_sys_startup(
         0, 0, state_ptr->h_inst, 0
     );
 
-    if (handle == 0) {
+    if (!handle) {
         MessageBoxA(NULL, "Window creation failed!", "Error", MB_ICONEXCLAMATION | MB_OK);
         KFATAL("Window creation failed!");
         return false;
     }
-
     state_ptr->hwnd = handle;
 
     //show window
@@ -127,10 +123,9 @@ b8 platform_sys_startup(
     //if initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE;
     ShowWindow(state_ptr->hwnd, show_window_command_flags);
 
-    //clock setup
     clock_setup();
 
-    KINFO("Platform subsystem for Windows initialized.");
+    KDEBUG("Platform subsystem for Windows initialized.");
     return true;
 }
 
@@ -152,30 +147,17 @@ b8 platform_pump_msgs() {
     return true;
 }
 
-void* platform_allocate(u64 size, b8 aligned) {
-    return malloc(size);
-}
+void* platform_allocate(u64 size, b8 aligned) { return malloc(size); }
+void platform_free(void *block, b8 aligned) { free(block); } 
 
-void platform_free(void *block, b8 aligned) {
-    free(block);
-} 
-
-void* platform_zero_mem(void *block, u64 size) {
-    return memset(block, 0, size);
-}
-
-void* platform_copy_mem(void *dest, const void *src, u64 size) {
-    return memcpy(dest, src, size);
-}
-
-void* platform_set_mem(void *dest, i32 val, u64 size) {
-    return memset(dest, val, size);
-}
+void* platform_zero_mem(void *block, u64 size) { return memset(block, 0, size); }
+void* platform_copy_mem(void *dest, const void *src, u64 size) { return memcpy(dest, src, size); }
+void* platform_set_mem(void *dest, i32 val, u64 size) { return memset(dest, val, size); }
 
 void platform_console_write(const char *msg, u8 clr) {
-    HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     //FATAL, ERROR, WARN, INFO, DEBUG, TRACE
     static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+    HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(console_handle, levels[clr]); 
     OutputDebugStringA(msg);
     u64 len = strlen(msg);
@@ -184,9 +166,9 @@ void platform_console_write(const char *msg, u8 clr) {
 }
 
 void platform_console_write_error(const char *msg, u8 clr) {
-    HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
     //FATAL, ERROR, WARN, INFO, DEBUG, TRACE
     static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+    HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
     SetConsoleTextAttribute(console_handle, levels[clr]); 
     OutputDebugStringA(msg);
     u64 len = strlen(msg);
@@ -197,18 +179,12 @@ void platform_console_write_error(const char *msg, u8 clr) {
 f64 platform_get_absolute_time() {
     if(!clock_freq)
         clock_setup();
-
     LARGE_INTEGER curr_time;
     QueryPerformanceCounter(&curr_time);
     return (f64)curr_time.QuadPart * clock_freq;
 }
 
-//sleep on the thread for provided ms - this blocks main thread
-// should only be used to give time back to OS for unused update power
-// thus it is not exported
-void platform_sleep(u64 ms) {
-    Sleep(ms);
-}
+void platform_sleep(u64 ms) { Sleep(ms); }
 
 void platform_get_required_ext_names(const char ***names_darr) {
     darray_push(*names_darr, &"VK_KHR_win32_surface");

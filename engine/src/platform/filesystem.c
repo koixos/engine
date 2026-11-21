@@ -37,6 +37,7 @@ b8 filesystem_open(const char *path, file_modes mode, b8 bin, file_handle *out_h
 
     out_handle->handle = fp;
     out_handle->is_valid = true;
+
     return true;
 }
 
@@ -93,7 +94,6 @@ b8 filesystem_write_line(file_handle *handle, const char *text) {
         i32 res = fputs(text, (FILE *)handle->handle);
         if (res == EOF)
             return false;
-
         res = fputc('\n', (FILE *)handle->handle);
 
         //make sure to flush the stream to write to the file immediately,

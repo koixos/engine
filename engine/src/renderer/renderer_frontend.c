@@ -12,10 +12,8 @@ static renderer_sys_state *state_ptr;
 
 b8 renderer_sys_init(u64 *mem_requirement, void *st, const char *app_name) {
     *mem_requirement = sizeof(renderer_sys_state);
-
-    if (st == 0)
+    if (!st)
         return true;
-
     state_ptr = st;
    
     //TODO: make this configurable
@@ -27,7 +25,7 @@ b8 renderer_sys_init(u64 *mem_requirement, void *st, const char *app_name) {
         return false;
     }
 
-    KINFO("Renderer subsystem initialized.");
+    KDEBUG("Renderer subsystem initialized.");
     return true;
 }
 
@@ -51,7 +49,6 @@ b8 renderer_begin_frame(f32 delta_time) {
 b8 renderer_end_frame(f32 delta_time) {
     if (!state_ptr)
         return false;
-
     b8 res = state_ptr->backend.end_frame(&state_ptr->backend, delta_time);
     state_ptr->backend.frame_num++;
     return res;

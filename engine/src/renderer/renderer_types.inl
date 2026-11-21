@@ -12,13 +12,10 @@ typedef struct renderer_backend {
     u64 frame_num;
 
     b8 (*initialize)(struct renderer_backend *backend, const char *app_name);
-
     void (*shutdown)(struct renderer_backend *backend);
-
     void (*resized)(struct renderer_backend *backend, u16 width, u16 height);
 
     b8 (*begin_frame)(struct renderer_backend *backend, f32 delta_time);
-
     b8 (*end_frame)(struct renderer_backend *backend, f32 delta_time);
 
 } renderer_backend;
