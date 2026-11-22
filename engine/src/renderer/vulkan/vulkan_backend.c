@@ -37,6 +37,25 @@ static void regenerate_framebufs(renderer_backend *backend, vulkan_swapchain *sw
 static b8 recreate_swapchain(renderer_backend *backend);
 static b8 create_bufs(vulkan_context *context);
 
+//TODO: temp method
+void upload_data_range(vulkan_context *context, VkCommandPool pool, VkFence fence, VkQueue queue, vulkan_buffer *buf,
+    u64 offset, u64 size, void *data) {
+    //create a host-visible staging buf to upload to. 
+    // mark it as the src of transfer
+    vulkan_buffer staging;
+    VkBufferUsageFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    vulkan_buffer_create(context, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, flags, true, &staging);
+
+    //load the data into the staging buf
+    vulkan_buffer_load_data(context, &staging, 0, size, 0, data);
+
+    //perform copy from staging to dev local buf
+    vulkan_buffer_copy_to(context, pool, fence, queue, staging.handle, 0, buf->handle, offset, size);
+
+    //clean up the staging buf
+    vulkan_buffer_destroy(context, &staging);
+}
+
 b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name) {
     //func ptrs
     context.find_mem_ind = find_mem_ind;
@@ -213,6 +232,49 @@ b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name)
         return false;
     }
 
+    //TODO: temp test code
+    const u32 vert_count = 4;
+    vertex_3d verts[4];
+    kzero_mem(verts, sizeof(vertex_3d) * vert_count);
+
+    verts[0].pos.x = 0.0;
+    verts[0].pos.y = -0.5;
+
+    verts[1].pos.x = 0.5;
+    verts[1].pos.y = 0.5;
+
+    verts[2].pos.x = 0.0;
+    verts[2].pos.y = 0.5;
+
+    verts[3].pos.x = 0.5;
+    verts[3].pos.y = -0.5;
+
+    const u32 ind_count = 6;
+    u32 indices[6] = {0, 1, 2, 0, 3, 1}; //indices in order... clkwise (i supp)...
+
+    upload_data_range(
+        &context,
+        context.dev.graphics_cmd_pool,
+        0,
+        context.dev.graphics_queue,
+        &context.obj_vert_buf,
+        0,
+        sizeof(vertex_3d) * vert_count,
+        verts
+    );
+
+    upload_data_range(
+        &context,
+        context.dev.graphics_cmd_pool,
+        0,
+        context.dev.graphics_queue,
+        &context.obj_ind_buf,
+        0,
+        sizeof(u32) * ind_count,
+        indices
+    );
+    //TODO: END of temp code
+
     KINFO("Vulkan renderer initialized successfully.");
     return true;
 }
@@ -384,6 +446,20 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
 
     //begin the render pass
     vulkan_renderpass_begin(cmd_buf, &context.main_rp, context.swapchain.framebufs[context.img_ind].handle);
+
+    //TODO: temp test code
+    vulkan_obj_shader_use(&context, &context.obj_shader);
+
+    //bind vert buf at offset
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(cmd_buf->handle, 0, 1, &context.obj_vert_buf.handle, (VkDeviceSize *)offsets);
+
+    //bind ind buf at offset
+    vkCmdBindIndexBuffer(cmd_buf->handle, context.obj_ind_buf.handle, 0, VK_INDEX_TYPE_UINT32);
+
+    //issue the draw
+    vkCmdDrawIndexed(cmd_buf->handle, 6, 1, 0, 0, 0);
+    //TODO: END of temp test code
 
     return true;
 }

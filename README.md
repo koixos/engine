@@ -36,6 +36,16 @@
 - 20 kasım: graphics pipeline imp'e başladım birkaç gün önce ve devam ediyorum. allah kahretmesin çok uzun sürüyor. ÇÜNKÜ DOĞRU DÜZGÜN ÇALIŞAMADIM. yetmezmiş gibi spec'in ilgili kısımlarını okumam gerek. hayat neden bu kadar zorsun ki...
 
 - 21 kasım: vulkan buffer imp tamalandı. bir sonraki aşamada ekranda bir üçgen çizebilmek için gereken setup ı yapacağım yüksek iht. ama başlamadan önce code revision yapıcam çünkü proje büyüdükçe layout um, kodlama stillerim vs karıştı. 
+
+- 22 kasım: İLK ŞEKİLLERİMİ ÇİZDİM!!! görsel:
+
+<img
+  width="1939"
+  height="1233"
+  alt="image"
+  src="https://github.com/user-attachments/assets/39693a8b-3735-4c48-8afb-067560946fab"
+/>
+
 ---
 **TODOs**
 
