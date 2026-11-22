@@ -25,13 +25,7 @@ void vulkan_framebuf_create(
     framebuf_create_info.width = context->swapchain.extent.width;
     framebuf_create_info.height = context->swapchain.extent.height;
     framebuf_create_info.layers = 1;
-
-    VK_CHECK(vkCreateFramebuffer(
-        context->dev.logical_dev,
-        &framebuf_create_info,
-        context->allocator,
-        &out_framebuf->handle
-    ));
+    VK_CHECK(vkCreateFramebuffer(context->dev.logical_dev, &framebuf_create_info, context->allocator, &out_framebuf->handle));
 }
 
 void vulkan_framebuf_destroy(vulkan_context *context, vulkan_framebuffer *framebuf) {

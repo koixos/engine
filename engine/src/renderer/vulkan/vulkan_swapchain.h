@@ -3,9 +3,7 @@
 #include "vulkan_types.inl"
 
 void vulkan_swapchain_create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *out_swch);
-
 void vulkan_swapchain_recreate(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *swch);
-
 void vulkan_swapchain_destroy(vulkan_context *context, vulkan_swapchain *swch);
 
 b8 vulkan_swapchain_acquire_next_img_ind(
@@ -25,4 +23,3 @@ void vulkan_swapchain_present(
     VkSemaphore render_complete_sem,
     u32 present_img_ind
 );
-

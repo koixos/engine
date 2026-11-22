@@ -35,8 +35,6 @@ b8 vulkan_obj_shader_create(vulkan_context *context, vulkan_obj_shader *out_shad
     //TODO: descriptors
     
     /* pipeline creation */
-    
-    //viewport
     VkViewport vp;
     vp.x = 0.0f;
     vp.y = (f32)context->framebuffer_height;
@@ -45,7 +43,6 @@ b8 vulkan_obj_shader_create(vulkan_context *context, vulkan_obj_shader *out_shad
     vp.minDepth = 0.0f;
     vp.maxDepth = 1.0f;
 
-    //scissor
     VkRect2D scissor;
     scissor.offset.x = scissor.offset.y = 0;
     scissor.extent.width = context->framebuffer_width;
@@ -55,6 +52,7 @@ b8 vulkan_obj_shader_create(vulkan_context *context, vulkan_obj_shader *out_shad
     u32 offset = 0;
     const i32 attr_count = 1;
     VkVertexInputAttributeDescription attr_descs[1]; //[attr_count]
+    
     //position
     VkFormat formats[1] = { //[attr_count]
         VK_FORMAT_R32G32B32_SFLOAT
@@ -81,6 +79,7 @@ b8 vulkan_obj_shader_create(vulkan_context *context, vulkan_obj_shader *out_shad
         //stage_create_infos[i].sType = out_shader->stages[i].shader_stage_create_info.sType;
         stage_create_infos[i] = out_shader->stages[i].shader_stage_create_info;
     }
+    /* ----------------- */
 
     if (!vulkan_pipeline_create(
         context,
@@ -105,7 +104,6 @@ b8 vulkan_obj_shader_create(vulkan_context *context, vulkan_obj_shader *out_shad
 
 void vulkan_obj_shader_destroy(vulkan_context *context, struct vulkan_obj_shader *shader) {
     vulkan_pipeline_destroy(context, &shader->pipeline);
-    
     //destroy shader modules
     for (u32 i = 0; i < OBJ_SHADER_STAGE_COUNT; i++) {
         vkDestroyShaderModule(context->dev.logical_dev, shader->stages[i].handle, context->allocator);

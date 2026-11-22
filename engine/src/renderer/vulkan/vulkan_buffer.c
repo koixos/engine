@@ -69,13 +69,7 @@ void vulkan_buffer_destroy(vulkan_context *context, vulkan_buffer *buf) {
     buf->is_locked = false;
 }
 
-b8 vulkan_buffer_resize(
-    vulkan_context *context, 
-    u64 new_size, 
-    vulkan_buffer *buf,
-    VkQueue queue,
-    VkCommandPool pool
-) {
+b8 vulkan_buffer_resize(vulkan_context *context, u64 new_size, vulkan_buffer *buf, VkQueue queue, VkCommandPool pool) {
     //create new buf
     VkBufferCreateInfo buf_info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
     buf_info.size = new_size;
@@ -133,13 +127,7 @@ void vulkan_buffer_bind(vulkan_context *context, vulkan_buffer *buf, u64 offset)
     VK_CHECK(vkBindBufferMemory(context->dev.logical_dev, buf->handle, buf->mem, offset));
 }
 
-void* vulkan_buffer_lock_mem(
-    vulkan_context *context, 
-    vulkan_buffer *buf,
-    u64 offset,
-    u64 size,
-    u32 flags
-) {
+void* vulkan_buffer_lock_mem(vulkan_context *context, vulkan_buffer *buf, u64 offset, u64 size, u32 flags) {
     void *data;
     VK_CHECK(vkMapMemory(context->dev.logical_dev, buf->mem, offset, size, flags, &data));
     return data;

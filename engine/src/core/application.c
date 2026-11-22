@@ -49,11 +49,11 @@ typedef struct app_state {
 
 static app_state *app_st;
 
-/* event handlers (priv) */
-b8 app_on_event(u16 code, void *sender, void *listener_inst, event_context context);
-b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context);
-b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context context);
-/* --------------------- */
+/* event handlers */
+static b8 app_on_event(u16 code, void *sender, void *listener_inst, event_context context);
+static b8 app_on_key(u16 code, void *sender, void *listener_inst, event_context context);
+static b8 app_on_resized(u16 code, void *sender, void *listener_inst, event_context context);
+/* -------------- */
 
 b8 app_create(game *game_inst) {
     if (game_inst->app_state) {

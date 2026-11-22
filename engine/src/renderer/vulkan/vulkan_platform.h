@@ -2,12 +2,9 @@
 
 #include "defines.h"
 
-struct platform_state;
-struct vulkan_context;
-
 /**
- * Appends the names of required extensions for this platform
- * to the names_darr, which should be created and passed in.
+ * Appends the names of required extensions for the current platform
+ *  to the names_darr, which should be created and passed in.
  */
 void platform_get_required_ext_names(const char ***names_darr);
 

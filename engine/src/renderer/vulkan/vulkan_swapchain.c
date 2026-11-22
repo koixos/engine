@@ -5,9 +5,8 @@
 #include "core/logger.h"
 #include "core/kmemory.h"
 
-void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *swch);
-
-void destroy(vulkan_context *context, vulkan_swapchain *swch);
+static void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *swch);
+static void destroy(vulkan_context *context, vulkan_swapchain *swch);
 
 void vulkan_swapchain_create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *out_swch) {
     create(context, width, height, out_swch);
@@ -43,7 +42,9 @@ b8 vulkan_swapchain_acquire_next_img_ind(
         //trigger swapchain recreation, then boot out of render loop
         vulkan_swapchain_recreate(context, context->framebuffer_width, context->framebuffer_height, swch);
         return false;
-    } else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) {
+    } 
+    
+    if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) {
         KFATAL("Failed to acquire swapchain image!");
         return false;
     }
@@ -87,8 +88,7 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
     for (u32 i = 0; i < context->dev.swapchain_support.format_count; i++) {
         VkSurfaceFormatKHR format = context->dev.swapchain_support.formats[i];
         //preferred formats
-        if (format.format == VK_FORMAT_B8G8R8A8_UNORM &&
-            format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 swch->img_format = format;
                 found = true;
                 break;
@@ -109,11 +109,7 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
     }
 
     //re-query swch supp
-    vulkan_dev_query_swapchain_supp(
-        context->dev.physical_dev,
-        context->surface,
-        &context->dev.swapchain_support
-    );
+    vulkan_dev_query_swapchain_supp(context->dev.physical_dev, context->surface, &context->dev.swapchain_support);
 
     //check swch extent
     if (context->dev.swapchain_support.capabilities.currentExtent.width != UINT32_MAX)
@@ -126,7 +122,7 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
     swch_extent.height = KCLAMP(swch_extent.height, min.height, max.height);
 
     u32 img_count = context->dev.swapchain_support.capabilities.minImageCount + 1;
-    if (context->dev.swapchain_support.capabilities.maxImageCount > 0 &&
+    if (context->dev.swapchain_support.capabilities.maxImageCount > 0 && 
         img_count > context->dev.swapchain_support.capabilities.maxImageCount)
             img_count = context->dev.swapchain_support.capabilities.maxImageCount;
     
@@ -144,10 +140,10 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
     swch_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     //setup the queue fam indices
-    if (context->dev.graphics_queue_index != context->dev.present_queue_index) {
+    if (context->dev.graphics_queue_fam_ind != context->dev.present_queue_fam_ind) {
         u32 queue_fam_indices[] = {
-            (u32)context->dev.graphics_queue_index,
-            (u32)context->dev.present_queue_index
+            (u32)context->dev.graphics_queue_fam_ind,
+            (u32)context->dev.present_queue_fam_ind
         };
         swch_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         swch_create_info.queueFamilyIndexCount = 2;
@@ -164,12 +160,7 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
     swch_create_info.clipped = VK_TRUE;
     swch_create_info.oldSwapchain = 0;
 
-    VK_CHECK(vkCreateSwapchainKHR(
-        context->dev.logical_dev,
-        &swch_create_info,
-        context->allocator,
-        &swch->handle
-    ));
+    VK_CHECK(vkCreateSwapchainKHR(context->dev.logical_dev, &swch_create_info, context->allocator, &swch->handle));
 
     //start with a zero frame ind
     context->curr_frame = 0;
@@ -194,7 +185,6 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
         view_info.subresourceRange.levelCount = 1;
         view_info.subresourceRange.baseArrayLayer = 0;
         view_info.subresourceRange.layerCount = 1;
-
         VK_CHECK(vkCreateImageView(context->dev.logical_dev, &view_info, context->allocator, &swch->views[i]));
     }
 
@@ -219,7 +209,7 @@ void create(vulkan_context *context, u32 width, u32 height, vulkan_swapchain *sw
         &swch->depth_attachment
     );
 
-    KINFO("Swapchain created successfully.");
+    KDEBUG("Swapchain created successfully.");
 }
 
 void destroy(vulkan_context *context, vulkan_swapchain *swch) {

@@ -2,12 +2,7 @@
 
 #include "core/kmemory.h"
 
-void vulkan_cmd_buf_allocate(
-    vulkan_context *context,
-    VkCommandPool pool,
-    b8 is_primary,
-    vulkan_command_buffer *out_cmd_buf
-) {
+void vulkan_cmd_buf_allocate(vulkan_context *context, VkCommandPool pool, b8 is_primary, vulkan_command_buffer *out_cmd_buf) {
     kzero_mem(out_cmd_buf, sizeof(out_cmd_buf));
     
     VkCommandBufferAllocateInfo allocate_info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -17,36 +12,17 @@ void vulkan_cmd_buf_allocate(
     allocate_info.pNext = 0;
 
     out_cmd_buf->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
-    VK_CHECK(vkAllocateCommandBuffers(
-        context->dev.logical_dev,
-        &allocate_info,
-        &out_cmd_buf->handle
-    ));
+    VK_CHECK(vkAllocateCommandBuffers(context->dev.logical_dev, &allocate_info, &out_cmd_buf->handle));
     out_cmd_buf->state = COMMAND_BUFFER_STATE_READY;
 }
 
-void vulkan_cmd_buf_free(
-    vulkan_context *context,
-    VkCommandPool pool,
-    vulkan_command_buffer *cmd_buf
-) {
-    vkFreeCommandBuffers(
-        context->dev.logical_dev,
-        pool,
-        1,
-        &cmd_buf->handle
-    );
-
+void vulkan_cmd_buf_free(vulkan_context *context, VkCommandPool pool, vulkan_command_buffer *cmd_buf) {
+    vkFreeCommandBuffers(context->dev.logical_dev, pool, 1, &cmd_buf->handle);
     cmd_buf->handle = 0;
     cmd_buf->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
 }
 
-void vulkan_cmd_buf_begin(
-    vulkan_command_buffer *cmd_buf,
-    b8 is_single_use,
-    b8 is_renderpass_continue,
-    b8 is_simultaneous_use
-) {
+void vulkan_cmd_buf_begin(vulkan_command_buffer *cmd_buf, b8 is_single_use, b8 is_renderpass_continue, b8 is_simultaneous_use) {
     VkCommandBufferBeginInfo begin_info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     begin_info.flags = 0;
     
@@ -74,21 +50,12 @@ void vulkan_cmd_buf_reset(vulkan_command_buffer *cmd_buf) {
     cmd_buf->state = COMMAND_BUFFER_STATE_READY;
 }
 
-void vulkan_cmd_buf_allocate_begin_single_use(
-    vulkan_context *context,
-    VkCommandPool pool,
-    vulkan_command_buffer *out_cmd_buf
-) {
+void vulkan_cmd_buf_allocate_begin_single_use(vulkan_context *context, VkCommandPool pool, vulkan_command_buffer *out_cmd_buf) {
     vulkan_cmd_buf_allocate(context, pool, true, out_cmd_buf);
     vulkan_cmd_buf_begin(out_cmd_buf, true, false, false);
 }
 
-void vulkan_cmd_buf_end_single_use(
-    vulkan_context *context,
-    VkCommandPool pool,
-    vulkan_command_buffer *cmd_buf,
-    VkQueue queue
-) {
+void vulkan_cmd_buf_end_single_use(vulkan_context *context, VkCommandPool pool, vulkan_command_buffer *cmd_buf, VkQueue queue) {
     vulkan_cmd_buf_end(cmd_buf);
 
     //submit the queue

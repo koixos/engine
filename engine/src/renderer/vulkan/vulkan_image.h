@@ -16,11 +16,6 @@ void vulkan_img_create(
     vulkan_image *out_img
 );
 
-void vulkan_img_view_create(
-    vulkan_context *context,
-    VkFormat format,
-    vulkan_image *img,
-    VkImageAspectFlags aspect_flags
-);
-
 void vulkan_img_destroy(vulkan_context *context, vulkan_image *img);
+
+void vulkan_img_view_create(vulkan_context *context, VkFormat format, vulkan_image *img, VkImageAspectFlags aspect_flags);

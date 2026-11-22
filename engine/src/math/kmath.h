@@ -23,7 +23,7 @@
 #define K_INF                   1e30f
 #define K_FLOAT_EPS             1.192092896e-07f    //smallest pos num where 1.0 + FLOAT_EPSILON != 0
 
-/* GENERAL MATH FUNCS (priv) */
+/* GENERAL MATH FUNCS */
 f32 ksin(f32 x);
 f32 kcos(f32 x);
 f32 ktan(f32 x);
@@ -36,7 +36,7 @@ i32 krand_in_range(i32 min, i32 max);
 
 f32 fkrand();
 f32 fkrand_in_range(f32 min, f32 max);
-/* ------------------------- */
+/* ------------------ */
 
 /**
  * Indicates if val is a power of 2 - 0 is considered _not_ a power of 2.

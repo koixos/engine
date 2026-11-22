@@ -13,24 +13,11 @@ b8 vulkan_buffer_create(
 
 void vulkan_buffer_destroy(vulkan_context *context, vulkan_buffer *buf);
 
-b8 vulkan_buffer_resize(
-    vulkan_context *context, 
-    u64 new_size, 
-    vulkan_buffer *buf,
-    VkQueue queue,
-    VkCommandPool pool
-);
+b8 vulkan_buffer_resize(vulkan_context *context, u64 new_size, vulkan_buffer *buf, VkQueue queue, VkCommandPool pool);
 
 void vulkan_buffer_bind(vulkan_context *context, vulkan_buffer *buf, u64 offset);
 
-void* vulkan_buffer_lock_mem(
-    vulkan_context *context, 
-    vulkan_buffer *buf,
-    u64 offset,
-    u64 size,
-    u32 flags
-);
-
+void* vulkan_buffer_lock_mem(vulkan_context *context, vulkan_buffer *buf, u64 offset, u64 size, u32 flags);
 void vulkan_buffer_unlock_mem(vulkan_context *context, vulkan_buffer *buf);
 
 void vulkan_buffer_load_data(

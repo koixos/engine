@@ -153,7 +153,7 @@ b8 vulkan_pipeline_create(
     );
 
     if (vulkan_result_is_success(res)) {
-        KDEBUG("Graphics pipeline created!");
+        KDEBUG("Graphics pipeline created.");
         return true;
     }
 
@@ -162,8 +162,7 @@ b8 vulkan_pipeline_create(
 }
 
 void vulkan_pipeline_destroy(vulkan_context *context, vulkan_pipeline *pipeline) {
-    if (!pipeline)
-        return;
+    if (!pipeline) return;
     
     //destroy pipeline
     if (pipeline->handle) {

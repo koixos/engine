@@ -15,9 +15,7 @@ typedef struct logger_sys_state {
 
 static logger_sys_state *state_ptr;
 
-/* priv funcs */
-void append2logfile(const char *msg);
-/* ---------- */
+static void append2logfile(const char *msg);
 
 b8 init_logging_sys(u64 *mem_requirement, void *st) {
     *mem_requirement = sizeof(logger_sys_state);

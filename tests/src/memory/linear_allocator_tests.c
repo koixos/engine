@@ -5,13 +5,11 @@
 
 #include <memory/linear_allocator.h>
 
-/* priv funcs */
-u8 linear_allocator_should_create_and_destroy();
-u8 linear_allocator_single_allocation_all_space();
-u8 linear_allocator_multi_allocation_all_space();
-u8 linear_allocator_multi_allocation_over_allocate();
-u8 linear_allocator_multi_allocation_all_space_and_free();
-/* ---------- */
+static u8 linear_allocator_should_create_and_destroy();
+static u8 linear_allocator_single_allocation_all_space();
+static u8 linear_allocator_multi_allocation_all_space();
+static u8 linear_allocator_multi_allocation_over_allocate();
+static u8 linear_allocator_multi_allocation_all_space_and_free();
 
 void linear_allocator_register_tests() {
     test_manager_register_test(linear_allocator_should_create_and_destroy,

@@ -8,13 +8,7 @@ void vulkan_fence_create(vulkan_context *context, b8 create_signaled, vulkan_fen
     VkFenceCreateInfo fence_create_info = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
     if (out_fence->is_signaled)
         fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    
-    VK_CHECK(vkCreateFence(
-        context->dev.logical_dev,
-        &fence_create_info,
-        context->allocator,
-        &out_fence->handle
-    ));
+    VK_CHECK(vkCreateFence(context->dev.logical_dev, &fence_create_info, context->allocator, &out_fence->handle));
 }
 
 void vulkan_fence_destroy(vulkan_context *context, vulkan_fence *fence) {
@@ -23,6 +17,13 @@ void vulkan_fence_destroy(vulkan_context *context, vulkan_fence *fence) {
         fence->handle = 0;
     }
     fence->is_signaled = false;
+}
+
+void vulkan_fence_reset(vulkan_context *context, vulkan_fence *fence) {
+    if (fence->is_signaled) {
+        VK_CHECK(vkResetFences(context->dev.logical_dev, 1, &fence->handle));
+        fence->is_signaled = false;
+    }
 }
 
 b8 vulkan_fence_wait(vulkan_context *context, vulkan_fence *fence, u64 timeout_ns) {
@@ -51,14 +52,5 @@ b8 vulkan_fence_wait(vulkan_context *context, vulkan_fence *fence, u64 timeout_n
             KERROR("vk_fence_wait - an unknown error has occurred");
             break;
     }
-
     return false;
 }
-
-void vulkan_fence_reset(vulkan_context *context, vulkan_fence *fence) {
-    if (fence->is_signaled) {
-        VK_CHECK(vkResetFences(context->dev.logical_dev, 1, &fence->handle));
-        fence->is_signaled = false;
-    }
-}
-

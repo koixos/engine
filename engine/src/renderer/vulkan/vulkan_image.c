@@ -52,8 +52,7 @@ void vulkan_img_create(
     mem_alloc_info.memoryTypeIndex = mem_type;
     VK_CHECK(vkAllocateMemory(context->dev.logical_dev, &mem_alloc_info, context->allocator, &out_img->mem));
 
-    //bind the mem
-    //TODO: configurable mem offset
+    //bind the mem - TODO: configurable mem offset
     VK_CHECK(vkBindImageMemory(context->dev.logical_dev, out_img->handle, out_img->mem, 0));
 
     //create view
@@ -61,27 +60,6 @@ void vulkan_img_create(
         out_img->view = 0;
         vulkan_img_view_create(context, format, out_img, view_aspect_flags);
     }
-}
-
-void vulkan_img_view_create(
-    vulkan_context *context,
-    VkFormat format,
-    vulkan_image *img,
-    VkImageAspectFlags aspect_flags
-) {
-    VkImageViewCreateInfo view_create_info = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-    view_create_info.image = img->handle;
-    view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;  //TODO: make configurable
-    view_create_info.format = format;
-    view_create_info.subresourceRange.aspectMask = aspect_flags;
-
-    //TODO: make configurable
-    view_create_info.subresourceRange.baseMipLevel = 0;
-    view_create_info.subresourceRange.levelCount = 1;
-    view_create_info.subresourceRange.baseArrayLayer = 0;
-    view_create_info.subresourceRange.layerCount = 1;
-
-    VK_CHECK(vkCreateImageView(context->dev.logical_dev, &view_create_info, context->allocator, &img->view));
 }
 
 void vulkan_img_destroy(vulkan_context *context, vulkan_image *img) {
@@ -99,4 +77,20 @@ void vulkan_img_destroy(vulkan_context *context, vulkan_image *img) {
         vkDestroyImage(context->dev.logical_dev, img->handle, context->allocator);
         img->handle = 0;
     }
+}
+
+void vulkan_img_view_create(vulkan_context *context, VkFormat format, vulkan_image *img, VkImageAspectFlags aspect_flags) {
+    VkImageViewCreateInfo view_create_info = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+    view_create_info.image = img->handle;
+    view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;  //TODO: make configurable
+    view_create_info.format = format;
+    view_create_info.subresourceRange.aspectMask = aspect_flags;
+
+    //TODO: make configurable
+    view_create_info.subresourceRange.baseMipLevel = 0;
+    view_create_info.subresourceRange.levelCount = 1;
+    view_create_info.subresourceRange.baseArrayLayer = 0;
+    view_create_info.subresourceRange.layerCount = 1;
+
+    VK_CHECK(vkCreateImageView(context->dev.logical_dev, &view_create_info, context->allocator, &img->view));
 }

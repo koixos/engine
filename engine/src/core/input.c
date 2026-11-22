@@ -22,21 +22,17 @@ typedef struct input_state {
 
 static input_state *state_ptr;
 
-/* priv funcs */
-
 // keyboard inp
-b8 input_is_key_down(keys key);
-b8 input_was_key_up(keys key);
+static b8 input_is_key_down(keys key);
+static b8 input_was_key_up(keys key);
 
 //mouse inp
-b8 input_is_btn_down(buttons btn);
-b8 input_is_btn_up(buttons btn);
-b8 input_was_btn_down(buttons btn);
-b8 input_was_btn_up(buttons btn);
-
-void input_get_mouse_pos(i32 *x, i32 *y);
-void input_get_prev_mouse_pos(i32 *x, i32 *y);
-/* ---------- */
+static b8 input_is_btn_down(buttons btn);
+static b8 input_is_btn_up(buttons btn);
+static b8 input_was_btn_down(buttons btn);
+static b8 input_was_btn_up(buttons btn);
+static void input_get_mouse_pos(i32 *x, i32 *y);
+static void input_get_prev_mouse_pos(i32 *x, i32 *y);
 
 void init_input_sys(u64 *mem_requirement, void *st) {
     *mem_requirement = sizeof(input_state);
