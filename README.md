@@ -39,23 +39,23 @@
 
 - 22 kasım: İLK ŞEKİLLERİMİ ÇİZDİM!!! görsel:
 
-<img
-  width="1939"
-  height="1233"
-  alt="image"
-  src="https://github.com/user-attachments/assets/39693a8b-3735-4c48-8afb-067560946fab"
-/>
+<p align="center">
+  <img
+    width="1939"
+    height="1233"
+    alt="image"
+    src="https://github.com/user-attachments/assets/39693a8b-3735-4c48-8afb-067560946fab"
+  />
+</p>
 
 - 24 kasım: uniforms ve descriptors implement done. bir de ufak bir bug vardı, karem animasyon uygulamıyordu. perspective matrix fonk.umda da bug'lar vardı onu upd ettim. şimdi artık ekrandaki quad'ıma küçülme animasyonu uygulayabiliyorum... DEMO: 
 
-<p align="center">
-  <img
-    src="https://github.com/user-attachments/assets/eb440d76-b5d0-441e-8104-ea4038558015"
-    width="720"
-    height="451"
-    alt="Project Demo"
-  />
-</p>
+<img
+  width="720"
+  height="406" 
+  alt="demo 2"
+  src="https://github.com/user-attachments/assets/5240da84-14a4-44b3-8770-2e88f955ae0e"
+/>
 ---
 **TODOs**
 
