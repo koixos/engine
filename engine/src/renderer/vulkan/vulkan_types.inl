@@ -4,6 +4,8 @@
 
 #include "core/asserts.h"
 
+#include "renderer/renderer_types.inl"
+
 #include <vulkan/vulkan.h>
 
 #define VK_CHECK(expr)                  \
@@ -127,8 +129,16 @@ typedef struct vulkan_pipeline {
 } vulkan_pipeline;
 
 typedef struct vulkan_obj_shader {
-    //vertex, fragment
-    vulkan_shader_stage stages[OBJ_SHADER_STAGE_COUNT];
+    vulkan_shader_stage stages[OBJ_SHADER_STAGE_COUNT]; //vertex, fragment
+
+    VkDescriptorPool global_desc_pool;
+    VkDescriptorSetLayout global_desc_set_layout;
+    VkDescriptorSet global_desc_sets[3];                //one desc set per frame - max 3 for triple-buffering
+    b8 desc_updated[3];
+    
+    global_uniform_obj global_ubo;                      //global uniform obj
+    vulkan_buffer global_uniform_buf;                   //global uniform buf
+
     vulkan_pipeline pipeline;
 } vulkan_obj_shader;
 
@@ -180,7 +190,7 @@ typedef struct vulkan_context {
 
     u32 in_flight_fence_count;
     vulkan_fence *in_flight_fences;
-    vulkan_fence **imgs_in_flight;  //holds ptrs to fences which exist and are owned elsewhere
+    vulkan_fence **imgs_in_flight;      //holds ptrs to fences which exist and are owned elsewhere
 
     i32 (*find_mem_ind)(u32 type_filter, u32 property_flags);
 } vulkan_context;

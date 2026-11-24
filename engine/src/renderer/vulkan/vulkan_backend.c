@@ -237,17 +237,19 @@ b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name)
     vertex_3d verts[4];
     kzero_mem(verts, sizeof(vertex_3d) * vert_count);
 
-    verts[0].pos.x = 0.0;
-    verts[0].pos.y = -0.5;
+    const f32 f = 10.0f;
 
-    verts[1].pos.x = 0.5;
-    verts[1].pos.y = 0.5;
+    verts[0].pos.x = -0.5 * f;
+    verts[0].pos.y = -0.5 * f;
 
-    verts[2].pos.x = 0.0;
-    verts[2].pos.y = 0.5;
+    verts[1].pos.x = 0.5 * f;
+    verts[1].pos.y = 0.5 * f;
 
-    verts[3].pos.x = 0.5;
-    verts[3].pos.y = -0.5;
+    verts[2].pos.x = -0.5 * f;
+    verts[2].pos.y = 0.5 * f;
+
+    verts[3].pos.x = 0.5 * f;
+    verts[3].pos.y = -0.5 * f;
 
     const u32 ind_count = 6;
     u32 indices[6] = {0, 1, 2, 0, 3, 1}; //indices in order... clkwise (i supp)...
@@ -447,20 +449,6 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
     //begin the render pass
     vulkan_renderpass_begin(cmd_buf, &context.main_rp, context.swapchain.framebufs[context.img_ind].handle);
 
-    //TODO: temp test code
-    vulkan_obj_shader_use(&context, &context.obj_shader);
-
-    //bind vert buf at offset
-    VkDeviceSize offsets[1] = {0};
-    vkCmdBindVertexBuffers(cmd_buf->handle, 0, 1, &context.obj_vert_buf.handle, (VkDeviceSize *)offsets);
-
-    //bind ind buf at offset
-    vkCmdBindIndexBuffer(cmd_buf->handle, context.obj_ind_buf.handle, 0, VK_INDEX_TYPE_UINT32);
-
-    //issue the draw
-    vkCmdDrawIndexed(cmd_buf->handle, 6, 1, 0, 0, 0);
-    //TODO: END of temp test code
-
     return true;
 }
 
@@ -522,6 +510,32 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) 
     );
 
     return true;
+}
+
+void vulkan_renderer_upd_global_st(mat4 projection, mat4 view, vec3 view_pos, vec4 ambient_clr, i32 mode) {
+    vulkan_command_buffer *cmd_buf = &context.graphics_cmd_bufs[context.img_ind];
+
+    
+    context.obj_shader.global_ubo.projection = projection;
+    context.obj_shader.global_ubo.view = view;
+    
+    //TODO: other ubp props
+    
+    vulkan_obj_shader_update_global_st(&context, &context.obj_shader);
+    
+    //TODO: temp test code
+    //bind vert buf at offset
+    vulkan_obj_shader_use(&context, &context.obj_shader);
+    
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(cmd_buf->handle, 0, 1, &context.obj_vert_buf.handle, (VkDeviceSize *)offsets);
+
+    //bind ind buf at offset
+    vkCmdBindIndexBuffer(cmd_buf->handle, context.obj_ind_buf.handle, 0, VK_INDEX_TYPE_UINT32);
+
+    //issue the draw
+    vkCmdDrawIndexed(cmd_buf->handle, 6, 1, 0, 0, 0);
+    //TODO: END of temp test code
 }
 
 VkBool32 vk_debug_callback(

@@ -52,12 +52,9 @@ b8 create_shader_module(
     shader_stages[stage_ind].shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shader_stages[stage_ind].shader_stage_create_info.stage = shader_stage_flag;
     shader_stages[stage_ind].shader_stage_create_info.module = shader_stages[stage_ind].handle;
-    shader_stages[stage_ind].shader_stage_create_info.pName = "main";   //entry point of the shader module
-                                                                        // main is std name
-    if (file_buf) {
-        kfree(file_buf, sizeof(u8) * size, MEM_TAG_STRING);
-        file_buf = 0;
-    }
+
+    //entry point of the shader module, main is std name
+    shader_stages[stage_ind].shader_stage_create_info.pName = "main";   
 
     return true;
 }

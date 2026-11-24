@@ -8,6 +8,7 @@ b8 renderer_backend_create(renderer_backend_type type, renderer_backend *out_bac
         out_backend->shutdown = vulkan_renderer_backend_shutdown;
         out_backend->begin_frame = vulkan_renderer_backend_begin_frame;
         out_backend->end_frame = vulkan_renderer_backend_end_frame;
+        out_backend->upd_global_st = vulkan_renderer_upd_global_st;
         out_backend->resized = vulkan_renderer_backend_on_resized;
         return true;
     }
@@ -19,5 +20,6 @@ void renderer_backend_destroy(renderer_backend *renderer_backend) {
     renderer_backend->shutdown = 0;
     renderer_backend->begin_frame = 0;
     renderer_backend->end_frame = 0;
+    renderer_backend->upd_global_st = 0;
     renderer_backend->resized = 0;
 }

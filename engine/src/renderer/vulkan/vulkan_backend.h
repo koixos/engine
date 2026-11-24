@@ -11,3 +11,4 @@ void vulkan_renderer_backend_on_resized(renderer_backend *backend, u16 width, u1
 
 b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time);
 b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time);
+void vulkan_renderer_upd_global_st(mat4 projection, mat4 view, vec3 view_pos, vec4 ambient_clr, i32 mode);

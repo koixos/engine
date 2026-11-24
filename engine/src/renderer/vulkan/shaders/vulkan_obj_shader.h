@@ -7,3 +7,4 @@
 b8 vulkan_obj_shader_create(vulkan_context *context, vulkan_obj_shader *out_shader);
 void vulkan_obj_shader_destroy(vulkan_context *context, vulkan_obj_shader *shader);
 void vulkan_obj_shader_use(vulkan_context *context, vulkan_obj_shader *shader);
+void vulkan_obj_shader_update_global_st(vulkan_context *context, vulkan_obj_shader *shader);
