@@ -224,3 +224,10 @@ void vulkan_obj_shader_update_global_st(vulkan_context *context, vulkan_obj_shad
     //bind the glob desc set to be updated
     vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.pipeline_layout, 0, 1, &glob_desc, 0, 0);    
 }
+
+void vulkan_obj_shader_upd_obj(vulkan_context *context, vulkan_obj_shader *shader, mat4 model) {
+    u32 img_ind = context->img_ind;
+    VkCommandBuffer cmd_buf = context->graphics_cmd_bufs[img_ind].handle;
+    
+    vkCmdPushConstants(cmd_buf, shader->pipeline.pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mat4), &model);
+}

@@ -101,14 +101,21 @@ b8 vulkan_pipeline_create(
     vertex_inp_create_info.pVertexAttributeDescriptions = attrs;
 
     //inp assembly
-    VkPipelineInputAssemblyStateCreateInfo inp_assembly
-        = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+    VkPipelineInputAssemblyStateCreateInfo inp_assembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
     inp_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inp_assembly.primitiveRestartEnable = VK_FALSE;
 
+    //push consts
+    VkPushConstantRange push_const;
+    push_const.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    push_const.offset = sizeof(mat4) * 0;
+    push_const.size = sizeof(mat4) * 2;
+    
     //pipeline layout
-    VkPipelineLayoutCreateInfo pipeline_layout_create_info
-        = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    VkPipelineLayoutCreateInfo pipeline_layout_create_info = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+    pipeline_layout_create_info.pushConstantRangeCount = 1;
+    pipeline_layout_create_info.pPushConstantRanges = &push_const;
+    
     //desc set layouts
     pipeline_layout_create_info.setLayoutCount = descriptor_set_layout_count;
     pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts;

@@ -61,12 +61,20 @@ b8 renderer_draw_frame(renderer_packet *pkt) {
     if (renderer_begin_frame(pkt->delta_time)) {
         //TODO: get rid of this
         mat4 projection = mat4_perspective(deg2rad(45.0f), 1280/720.0f, 0.1f, 1000.0f);
-        
-        static f32 z = -1.0f;
-        z -= 0.3f;
-        mat4 view = mat4_translation((vec3){0, 0, z});
 
+        static f32 z = 20.0f;
+        z += 0.1f;
+        mat4 view = mat4_translation((vec3){0, 0, z});
+        view = mat4_inverse(view);
+        
         state_ptr->backend.upd_global_st(projection, view, vec3_zero(), vec4_one(), 0);
+
+        //mat4 model = mat4_translation((vec3){0, 0, 0});
+        static f32 angle = 0.01f;
+        angle += 0.01f;
+        quat rot = quat_from_axis_angle(vec3_forward(), angle, false);
+        mat4 model = quat_to_rotation_matrix(rot, vec3_zero());
+        state_ptr->backend.upd_obj(model);
 
         //end frame; if this fails, it is likely unrecoverable
         b8 res = renderer_end_frame(pkt->delta_time);

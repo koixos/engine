@@ -50,12 +50,25 @@
 
 - 24 kasım: uniforms ve descriptors implement done. bir de ufak bir bug vardı, karem animasyon uygulamıyordu. perspective matrix fonk.umda da bug'lar vardı onu upd ettim. şimdi artık ekrandaki quad'ıma küçülme animasyonu uygulayabiliyorum... DEMO: 
 
-<img
-  width="720"
-  height="406" 
-  alt="demo 2"
-  src="https://github.com/user-attachments/assets/5240da84-14a4-44b3-8770-2e88f955ae0e"
-/>
+<p align="center">
+  <img
+    width="720"
+    height="406" 
+    alt="demo 2"
+    src="https://github.com/user-attachments/assets/5240da84-14a4-44b3-8770-2e88f955ae0e"
+  />
+</p>
+
+- 25 kasım: farklı tür bir uniform olan push const.ları implement ettim. bu sayede obje üzerinde upd yapabiliyorum. demodada görüleceği üzere objeden uzaklaşırken objeyi rotate ediyorum. DEMO:
+
+<p align="center">
+  <img
+    width="720"
+    height="410" 
+    alt="demo 3"
+    src="https://github.com/user-attachments/assets/84a092c8-8cf7-413d-9d91-fefd56885131"
+  />
+</p>
 ---
 **TODOs**
 

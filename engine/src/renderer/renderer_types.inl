@@ -28,8 +28,7 @@ typedef struct renderer_backend {
     b8 (*begin_frame)(struct renderer_backend *backend, f32 delta_time);
     b8 (*end_frame)(struct renderer_backend *backend, f32 delta_time);
     void (*upd_global_st)(mat4 projection, mat4 view, vec3 view_pos, vec4 ambient_clr, i32 mode);
-
-
+    void (*upd_obj)(mat4 model);
 } renderer_backend;
 
 typedef struct renderer_packet {

@@ -56,7 +56,7 @@ void upload_data_range(vulkan_context *context, VkCommandPool pool, VkFence fenc
     vulkan_buffer_destroy(context, &staging);
 }
 
-b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name) {
+b8 vulkan_backend_init(renderer_backend *backend, const char *app_name) {
     //func ptrs
     context.find_mem_ind = find_mem_ind;
 
@@ -281,7 +281,7 @@ b8 vulkan_renderer_backend_init(renderer_backend *backend, const char *app_name)
     return true;
 }
 
-void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
+void vulkan_backend_shutdown(renderer_backend *backend) {
     //make surethat there is no graphical op is going on
     vkDeviceWaitIdle(context.dev.logical_dev);
 
@@ -364,7 +364,7 @@ void vulkan_renderer_backend_shutdown(renderer_backend *backend) {
     vkDestroyInstance(context.inst, context.allocator);
 }
 
-void vulkan_renderer_backend_on_resized(renderer_backend *backend, u16 width, u16 height) {
+void vulkan_backend_on_resized(renderer_backend *backend, u16 width, u16 height) {
     context.framebuffer_width = width;
     context.framebuffer_height = height;
     //updt framebuf_size_generation that indicaets when the framebuffer size has been updated
@@ -372,14 +372,14 @@ void vulkan_renderer_backend_on_resized(renderer_backend *backend, u16 width, u1
     KDEBUG("Vulkan renderer backend resized -- w/h/gen: %i/%i/%llu", width, height, context.framebuf_size_generation);
 }
 
-b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time) {
+b8 vulkan_backend_begin_frame(renderer_backend *backend, f32 delta_time) {
     vulkan_device *dev = &context.dev;
 
     //check if recreating swapch and boot out
     if (context.recreating_swch) {
         VkResult res = vkDeviceWaitIdle(dev->logical_dev);
         if (!vulkan_result_is_success(res)) {
-            KERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) failed: '%s'", vulkan_result_string(res, true));
+            KERROR("vulkan_backend_begin_frame vkDeviceWaitIdle (1) failed: '%s'", vulkan_result_string(res, true));
             return false;
         }
         KDEBUG("Recreating swapchain, booting...");
@@ -390,7 +390,7 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
     if (context.framebuf_size_generation != context.framebuf_size_last_generation) {
         VkResult res = vkDeviceWaitIdle(dev->logical_dev);
         if (!vulkan_result_is_success(res)) {
-            KERROR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) failed: '%s'", vulkan_result_string(res, true));
+            KERROR("vulkan_backend_begin_frame vkDeviceWaitIdle (2) failed: '%s'", vulkan_result_string(res, true));
             return false;
         }
         
@@ -452,7 +452,7 @@ b8 vulkan_renderer_backend_begin_frame(renderer_backend *backend, f32 delta_time
     return true;
 }
 
-b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) {
+b8 vulkan_backend_end_frame(renderer_backend *backend, f32 delta_time) {
     vulkan_command_buffer *cmd_buf = &context.graphics_cmd_bufs[context.img_ind];
 
     vulkan_renderpass_end(cmd_buf, &context.main_rp);    
@@ -512,19 +512,22 @@ b8 vulkan_renderer_backend_end_frame(renderer_backend *backend, f32 delta_time) 
     return true;
 }
 
-void vulkan_renderer_upd_global_st(mat4 projection, mat4 view, vec3 view_pos, vec4 ambient_clr, i32 mode) {
-    vulkan_command_buffer *cmd_buf = &context.graphics_cmd_bufs[context.img_ind];
-
-    
+void vulkan_backend_upd_global_st(mat4 projection, mat4 view, vec3 view_pos, vec4 ambient_clr, i32 mode) {
     context.obj_shader.global_ubo.projection = projection;
     context.obj_shader.global_ubo.view = view;
     
     //TODO: other ubp props
     
     vulkan_obj_shader_update_global_st(&context, &context.obj_shader);
+}
+
+void vulkan_backend_upd_obj(mat4 model) {
+    vulkan_obj_shader_upd_obj(&context, &context.obj_shader, model);
     
     //TODO: temp test code
     //bind vert buf at offset
+    vulkan_command_buffer *cmd_buf = &context.graphics_cmd_bufs[context.img_ind];
+   
     vulkan_obj_shader_use(&context, &context.obj_shader);
     
     VkDeviceSize offsets[1] = {0};
