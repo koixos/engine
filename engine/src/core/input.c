@@ -23,7 +23,6 @@ typedef struct input_state {
 static input_state *state_ptr;
 
 // keyboard inp
-static b8 input_is_key_down(keys key);
 static b8 input_was_key_up(keys key);
 
 //mouse inp
@@ -100,13 +99,14 @@ b8 input_is_key_up(keys key) {
     return state_ptr ? !state_ptr->keyboard_curr.keys[key] : true;
 }
 
+b8 input_is_key_down(keys key) {
+    return state_ptr ? state_ptr->keyboard_curr.keys[key] : false;
+}
+
 b8 input_was_key_down(keys key) {
     return state_ptr ? state_ptr->keyboard_prev.keys[key] : false;
 }
 
-b8 input_is_key_down(keys key) {
-    return state_ptr ? state_ptr->keyboard_curr.keys[key] : false;
-}
 
 b8 input_was_key_up(keys key) {
     return state_ptr ? !state_ptr->keyboard_prev.keys[key] : true;

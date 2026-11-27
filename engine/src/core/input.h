@@ -154,5 +154,6 @@ void input_process_mouse_wheel(i8 z_delta);
 
 /* keyboard inp */
 b8 input_is_key_up(keys key);
+b8 input_is_key_down(keys key);
 b8 input_was_key_down(keys key);
 /* ------------ */

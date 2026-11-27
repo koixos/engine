@@ -7,7 +7,11 @@
 #include "math/kmath.h"
 
 typedef struct renderer_sys_state {
-    renderer_backend backend;
+    renderer_backend backend;  
+    mat4 view;
+    mat4 projection;
+    f32 near_clip;
+    f32 far_clip;
 } renderer_sys_state;
 
 static renderer_sys_state *state_ptr;
@@ -27,6 +31,16 @@ b8 renderer_sys_init(u64 *mem_requirement, void *st, const char *app_name) {
         return false;
     }
 
+    //def val.s for projection matrix
+    state_ptr->near_clip = 0.1f;
+    state_ptr->far_clip = 1000.0f;
+    state_ptr->projection = mat4_perspective(deg2rad(45.0f), 1280/720.0f, 0.1f, 1000.0f);   
+
+    //def val.s for view matrix
+    state_ptr->view = mat4_translation((vec3){0, 0, 30.0f});
+    state_ptr->view = mat4_inverse(state_ptr->view);
+        
+
     KDEBUG("Renderer subsystem initialized.");
     return true;
 }
@@ -38,10 +52,12 @@ void renderer_sys_shutdown(void *st) {
 }
 
 void renderer_on_resized(u16 width, u16 height) {
-    if (state_ptr)
+    if (state_ptr) {
+        state_ptr->projection = mat4_perspective(deg2rad(45.0f), width/(f32)height, state_ptr->near_clip, state_ptr->far_clip);
         state_ptr->backend.resized(&state_ptr->backend, width, height);
-    else
+    } else {
         KWARN("No renderer backend to resize.");
+    }
 }
 
 b8 renderer_begin_frame(f32 delta_time) {
@@ -58,16 +74,8 @@ b8 renderer_end_frame(f32 delta_time) {
 
 b8 renderer_draw_frame(renderer_packet *pkt) {
     //if begin frame returned successfully, mid-frame operations may continue
-    if (renderer_begin_frame(pkt->delta_time)) {
-        //TODO: get rid of this
-        mat4 projection = mat4_perspective(deg2rad(45.0f), 1280/720.0f, 0.1f, 1000.0f);
-
-        static f32 z = 20.0f;
-        z += 0.1f;
-        mat4 view = mat4_translation((vec3){0, 0, z});
-        view = mat4_inverse(view);
-        
-        state_ptr->backend.upd_global_st(projection, view, vec3_zero(), vec4_one(), 0);
+    if (renderer_begin_frame(pkt->delta_time)) {        
+        state_ptr->backend.upd_global_st(state_ptr->projection, state_ptr->view, vec3_zero(), vec4_one(), 0);
 
         //mat4 model = mat4_translation((vec3){0, 0, 0});
         static f32 angle = 0.01f;
@@ -84,4 +92,8 @@ b8 renderer_draw_frame(renderer_packet *pkt) {
         }
     }
     return true;
+}
+
+void renderer_set_view(mat4 view) {
+    state_ptr->view = view;
 }

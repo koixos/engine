@@ -69,6 +69,17 @@
     src="https://github.com/user-attachments/assets/84a092c8-8cf7-413d-9d91-fefd56885131"
   />
 </p>
+
+- 26 kasım: artık klavye inputlarıyla cameramı tüm eksenlerde hareket ettirebiliyorum. demoda objeye yaklaştığım, uzaklaştığım ve objenin etrafında gezdiğim görülebilir. şu anda 3d boyut tam oluşmadığı için anlaması zor ama çalışıyor... videodaki ping imsi görüntü speed'i x2 yaptığımdan dolayı. normal akışta öyle bir dalgalanma yok. DEMO:
+
+<p align="center">
+  <img
+    width="720"
+    height="450"
+    alt="demo 4"
+    src="https://github.com/user-attachments/assets/7851cb48-4811-4586-a7b3-4d09cee8ade2"
+  />
+</p>
 ---
 **TODOs**
 
