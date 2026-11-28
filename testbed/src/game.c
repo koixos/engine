@@ -49,8 +49,8 @@ b8 game_update(game *game_inst, f32 delta_time) {
     if (input_is_key_down(KEY_DOWN)) 
         cam_pitch(st, 1.0f * delta_time);
     
-    f32 temp_move_speed = 30.0f;
-    vec3 vel = vec3_zero();
+    f32 temp_move_speed = 50.0f;
+    vec3 vel = vec3_zero(); 
 
     if (input_is_key_down('W')) {
         vec3 forward = mat4_forward(st->view);

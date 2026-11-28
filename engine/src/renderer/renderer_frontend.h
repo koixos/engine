@@ -13,3 +13,15 @@ b8 renderer_draw_frame(renderer_packet *pkt);
 
 //TODO: should remove the KAPI
 KAPI void renderer_set_view(mat4 view);
+
+void renderer_create_texture(
+    const char *name,
+    b8 auto_release,
+    i32 w, i32 h,
+    i32 channel_count,
+    const u8 *pixels,
+    b8 has_transparency,
+    texture *out_texture
+);
+
+void renderer_destroy_texture(texture *texture);

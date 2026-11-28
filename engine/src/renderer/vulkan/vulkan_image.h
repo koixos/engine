@@ -19,3 +19,20 @@ void vulkan_img_create(
 void vulkan_img_destroy(vulkan_context *context, vulkan_image *img);
 
 void vulkan_img_view_create(vulkan_context *context, VkFormat format, vulkan_image *img, VkImageAspectFlags aspect_flags);
+
+/**
+ * Transitions the given img from old_layout to new_layout.
+ */
+void vulkan_img_transition_layout(
+    vulkan_context *context,
+    vulkan_command_buffer *cmd_buf,
+    vulkan_image *img,
+    VkFormat format,
+    VkImageLayout old_layout,
+    VkImageLayout new_layout    
+);
+
+/**
+ * Copies data in buf to the given img. 
+ */
+void vulkan_img_copy_from_buf(vulkan_context *context, vulkan_image *img, VkBuffer buf, vulkan_command_buffer *cmd_buf);

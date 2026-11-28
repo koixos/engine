@@ -4,6 +4,8 @@
 
 #include "math/math_types.h"
 
+#include "resources/resource_types.h"
+
 typedef enum renderer_backend_type {
     RENDERER_BACKEND_TYPE_VULKAN,
     RENDERER_BACKEND_TYPE_OPENGL,
@@ -27,8 +29,21 @@ typedef struct renderer_backend {
 
     b8 (*begin_frame)(struct renderer_backend *backend, f32 delta_time);
     b8 (*end_frame)(struct renderer_backend *backend, f32 delta_time);
+    
     void (*upd_global_st)(mat4 projection, mat4 view, vec3 view_pos, vec4 ambient_clr, i32 mode);
     void (*upd_obj)(mat4 model);
+
+    void (*create_texture)(
+        const char *name,
+        b8 auto_release,
+        i32 w, i32 h,
+        i32 channel_count,
+        const u8 *pixels,
+        b8 has_transparency,
+        texture *out_texture
+    );
+
+    void (*destroy_texture)(texture *texture);
 } renderer_backend;
 
 typedef struct renderer_packet {

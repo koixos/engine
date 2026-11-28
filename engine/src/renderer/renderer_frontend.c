@@ -97,3 +97,19 @@ b8 renderer_draw_frame(renderer_packet *pkt) {
 void renderer_set_view(mat4 view) {
     state_ptr->view = view;
 }
+
+void renderer_create_texture(
+    const char *name,
+    b8 auto_release,
+    i32 w, i32 h,
+    i32 channel_count,
+    const u8 *pixels,
+    b8 has_transparency,
+    texture *out_texture
+) {
+    state_ptr->backend.create_texture(name, auto_release, w, h, channel_count, pixels, has_transparency, out_texture);
+}
+
+void renderer_destroy_texture(texture *texture) {
+    state_ptr->backend.destroy_texture(texture);
+}

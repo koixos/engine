@@ -88,6 +88,11 @@ typedef struct vulkan_image {
     u32 height;
 } vulkan_image;
 
+typedef struct vulkan_texture_data {
+    vulkan_image img;
+    VkSampler sampler;
+} vulkan_texture_data;
+
 typedef struct vulkan_swapchain {
     VkSurfaceFormatKHR img_format;
     u8 max_frames_in_flight;
